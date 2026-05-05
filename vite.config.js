@@ -1,55 +1,27 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'MarwanFit',
         short_name: 'MarwanFit',
-        description: 'Suivi sport, nutrition et progression personnalisé',
-        theme_color: '#111827',
-        background_color: '#f9fafb',
+        description: 'Ton app de coaching sport & nutrition personnalisée',
+        theme_color: '#0a0a0f',
+        background_color: '#0a0a0f',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
         icons: [
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.origin === 'https://api.anthropic.com',
-            handler: 'NetworkOnly'
-          },
-          {
-            urlPattern: ({ url }) => url.origin === 'https://world.openfoodfacts.org',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'openfoodfacts-cache',
-              expiration: { maxEntries: 200, maxAgeSeconds: 86400 }
-            }
-          }
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
         ]
       }
     })
   ]
-});
+})

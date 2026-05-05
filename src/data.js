@@ -1,278 +1,260 @@
-// Base aliments (par 100g sauf indication)
-export const FOOD_DB = {
-  "poulet escalope": { kcal: 110, p: 23, c: 0, l: 2, unit: "g" },
-  "poulet cuit": { kcal: 165, p: 31, c: 0, l: 3.6, unit: "g" },
-  "boeuf steak 5%": { kcal: 130, p: 22, c: 0, l: 5, unit: "g" },
-  "boeuf haché 15%": { kcal: 215, p: 19, c: 0, l: 15, unit: "g" },
-  "dinde": { kcal: 105, p: 22, c: 0, l: 1, unit: "g" },
-  "agneau filet": { kcal: 200, p: 25, c: 0, l: 11, unit: "g" },
-  "saumon": { kcal: 208, p: 20, c: 0, l: 13, unit: "g" },
-  "thon en boîte": { kcal: 116, p: 26, c: 0, l: 1, unit: "g" },
-  "cabillaud": { kcal: 82, p: 18, c: 0, l: 0.7, unit: "g" },
-  "merlan": { kcal: 76, p: 17, c: 0, l: 0.6, unit: "g" },
-  "crevettes": { kcal: 99, p: 24, c: 0, l: 0.3, unit: "g" },
-  "oeuf entier": { kcal: 72, p: 6, c: 0.4, l: 5, unit: "unit" },
-  "blanc oeuf": { kcal: 17, p: 3.6, c: 0, l: 0.1, unit: "unit" },
-  "whey isolate (1 dose 30g)": { kcal: 110, p: 25, c: 1, l: 0.5, unit: "scoop" },
-  "whey concentrate (1 dose 30g)": { kcal: 120, p: 24, c: 3, l: 1.5, unit: "scoop" },
-  "flocons d'avoine": { kcal: 380, p: 13, c: 60, l: 7, unit: "g" },
-  "riz blanc cuit": { kcal: 130, p: 2.7, c: 28, l: 0.3, unit: "g" },
-  "riz complet cuit": { kcal: 112, p: 2.6, c: 23, l: 0.9, unit: "g" },
-  "pâtes complètes cuites": { kcal: 124, p: 5, c: 25, l: 1, unit: "g" },
-  "pâtes blanches cuites": { kcal: 158, p: 5.8, c: 31, l: 0.9, unit: "g" },
-  "pâtes protéinées sèches": { kcal: 360, p: 35, c: 35, l: 4, unit: "g" },
-  "patate douce cuite": { kcal: 86, p: 1.6, c: 20, l: 0.1, unit: "g" },
-  "pomme de terre cuite": { kcal: 87, p: 1.7, c: 20, l: 0.1, unit: "g" },
-  "quinoa cuit": { kcal: 120, p: 4.4, c: 21, l: 1.9, unit: "g" },
-  "lentilles corail sèches": { kcal: 350, p: 24, c: 60, l: 1, unit: "g" },
-  "lentilles cuites": { kcal: 116, p: 9, c: 20, l: 0.4, unit: "g" },
-  "pois chiches cuits": { kcal: 164, p: 9, c: 27, l: 2.6, unit: "g" },
-  "haricots rouges cuits": { kcal: 127, p: 9, c: 23, l: 0.5, unit: "g" },
-  "pain complet": { kcal: 247, p: 13, c: 41, l: 3, unit: "g" },
-  "pain seigle": { kcal: 259, p: 8.5, c: 48, l: 3.3, unit: "g" },
-  "boulgour cuit": { kcal: 83, p: 3, c: 19, l: 0.2, unit: "g" },
-  "haricots verts": { kcal: 31, p: 1.8, c: 7, l: 0.1, unit: "g" },
-  "petits pois": { kcal: 81, p: 5, c: 14, l: 0.4, unit: "g" },
-  "oignon rouge": { kcal: 40, p: 1.1, c: 9, l: 0.1, unit: "g" },
-  "poivron": { kcal: 31, p: 1, c: 6, l: 0.3, unit: "g" },
-  "ail": { kcal: 149, p: 6.4, c: 33, l: 0.5, unit: "g" },
-  "banane": { kcal: 89, p: 1.1, c: 23, l: 0.3, unit: "g" },
-  "pomme": { kcal: 52, p: 0.3, c: 14, l: 0.2, unit: "g" },
-  "fraises": { kcal: 32, p: 0.7, c: 7.7, l: 0.3, unit: "g" },
-  "myrtilles": { kcal: 57, p: 0.7, c: 14, l: 0.3, unit: "g" },
-  "citron": { kcal: 29, p: 1.1, c: 9, l: 0.3, unit: "g" },
-  "huile olive": { kcal: 884, p: 0, c: 0, l: 100, unit: "g" },
-  "huile coco vierge": { kcal: 862, p: 0, c: 0, l: 100, unit: "g" },
-  "amandes": { kcal: 579, p: 21, c: 22, l: 50, unit: "g" },
-  "noix": { kcal: 654, p: 15, c: 14, l: 65, unit: "g" },
-  "beurre cacahuète": { kcal: 588, p: 25, c: 20, l: 50, unit: "g" },
-  "avocat": { kcal: 160, p: 2, c: 9, l: 15, unit: "g" },
-  "lait demi-écrémé": { kcal: 47, p: 3.3, c: 4.8, l: 1.6, unit: "ml" },
-  "lait écrémé": { kcal: 33, p: 3.4, c: 5, l: 0.1, unit: "ml" },
-  "yaourt grec 0%": { kcal: 59, p: 10, c: 3.6, l: 0.4, unit: "g" },
-  "yaourt nature": { kcal: 61, p: 3.5, c: 4.7, l: 3.3, unit: "g" },
-  "fromage blanc 0%": { kcal: 45, p: 8, c: 3, l: 0.1, unit: "g" },
-  "skyr": { kcal: 65, p: 11, c: 4, l: 0.2, unit: "g" },
-  "cacao poudre non sucré": { kcal: 240, p: 20, c: 12, l: 14, unit: "g" },
-  "miel": { kcal: 304, p: 0.3, c: 82, l: 0, unit: "g" }
-};
-
-export const WOLF_PROGRAM = {
-  "Wolf S1 - Legday/Cardio": {
-    type: "wolf",
-    duration: "40 min",
-    description: "11 circuits training de 3 min, 2 exercices alternés toutes les 30s",
-    structure: [
-      { circuit: 1, exercises: ["Gorille", "Boxe coup droit"] },
-      { circuit: 2, exercises: ["Squat jump", "Essuie-glace"] },
-      { circuit: 3, exercises: ["Squat sumo coup de genoux", "Genoux twist"] },
-      { circuit: 4, exercises: ["Prière", "Coups droits latéraux"] },
-      { circuit: 5, exercises: ["Fentes sautées", "Burpees"] },
-      { circuit: 6, exercises: ["Soulevé de terre 1 jambe", "Talons fesses"] },
-      { circuit: 7, exercises: ["Pont", "Ciseaux devant-derrière"] },
-      { circuit: 8, exercises: ["Squat talons", "Montée de genoux"] },
-      { circuit: 9, exercises: ["Demi squat mollets", "Tipping"] },
-      { circuit: 10, exercises: ["Sprinteur", "Uppercut"] },
-      { circuit: 11, exercises: ["Squat écarté resserré sauté", "10 montées genoux + 1 burpee"] }
+// ─── PROGRAMMES ───────────────────────────────────────────────
+export const PROGRAMS = {
+  push: {
+    label: 'Push',
+    days: 'Lundi · Jeudi',
+    muscles: ['Pectoraux', 'Épaules', 'Triceps'],
+    color: '#7c6af7',
+    exercises: [
+      { id: 'dc', name: 'Développé couché barre', detail: '4×8-10 · Exercice roi pectoraux', sets: 4, note: 'Descente contrôlée, coudes à 45°' },
+      { id: 'di', name: 'Développé incliné haltères', detail: '3×10-12 · Faisceau claviculaire', sets: 3, note: 'Inclinaison 30-45°' },
+      { id: 'dm', name: 'Développé militaire barre', detail: '4×8-10 · Priorité épaules', sets: 4, note: 'Core gaîné, pas de cambre' },
+      { id: 'el', name: 'Élévations latérales', detail: '4×12-15 · Largeur épaules', sets: 4, note: 'Coude légèrement fléchi, montée lente' },
+      { id: 'ef', name: 'Élévations frontales', detail: '3×12 · Deltoïde antérieur', sets: 3, note: 'Alterner gauche/droite' },
+      { id: 'tr', name: 'Pushdown triceps câble', detail: '4×12-15 · Finition triceps', sets: 4, note: 'Verrouiller les coudes au corps' },
+    ]
+  },
+  pull: {
+    label: 'Pull',
+    days: 'Mardi · Vendredi',
+    muscles: ['Grand dos', 'Trapèzes', 'Biceps', 'Arrière épaules'],
+    color: '#4de8b0',
+    exercises: [
+      { id: 'tv', name: 'Tirage vertical prise large', detail: '4×8-10 · Largeur dos', sets: 4, note: 'Omoplate rétraction, coude dans la poche' },
+      { id: 'rb', name: 'Rowing barre', detail: '4×8-10 · Épaisseur dos', sets: 4, note: 'Buste à 45°, tirer vers le nombril' },
+      { id: 'ru', name: 'Rowing haltère unilatéral', detail: '3×10-12 · Correction asymétrie', sets: 3, note: 'Amplitude maximale' },
+      { id: 'fp', name: 'Face pulls câble', detail: '4×15 · ⚡ Corriger cyphose', sets: 4, note: 'PRIORITÉ : rotation externe, sortir les coudes' },
+      { id: 'cb', name: 'Curl biceps barre', detail: '4×10-12 · Masse biceps', sets: 4, note: 'Contrôle total de la descente' },
+      { id: 'cm', name: 'Curl marteau haltères', detail: '3×12 · Brachial + avant-bras', sets: 3, note: 'Poignet neutre' },
+    ]
+  },
+  legs: {
+    label: 'Legs',
+    days: 'Mercredi · Samedi',
+    muscles: ['Quadriceps', 'Ischio-jambiers', 'Fessiers', 'Mollets'],
+    color: '#ffa04a',
+    exercises: [
+      { id: 'sq', name: 'Squat barre', detail: '4×8-10 · ⚠️ Douleur genoux', sets: 4, note: 'Amplitude réduite si douleur, essaie stance large' },
+      { id: 'pr', name: 'Presse à cuisses', detail: '4×10-12 · Substitut si genoux', sets: 4, note: 'Pieds hauts = ischio/fessiers, pieds bas = quadris' },
+      { id: 'rd', name: 'Romanian Deadlift', detail: '3×10-12 · Ischio + fessiers', sets: 3, note: 'Dos plat, pousser les hanches en arrière' },
+      { id: 'lc', name: 'Leg curl couché', detail: '3×12-15 · Isolation ischio', sets: 3, note: 'Pas de triche au niveau des hanches' },
+      { id: 'mo', name: 'Mollets debout machine', detail: '4×15-20 · Gastrocnémien', sets: 4, note: 'Amplitude complète, étirement en bas' },
+    ]
+  },
+  wolf: {
+    label: 'Wolf',
+    days: 'Maison · Sans matériel',
+    muscles: ['Full body', 'Cardio', 'HIIT'],
+    color: '#ff6b8a',
+    exercises: [
+      { id: 'w1', name: 'Circuit 1 — Activation', detail: 'Jumping jacks + tour de hanches · 5 min', sets: 1, note: 'Monter la fréquence cardiaque progressivement' },
+      { id: 'w2', name: 'Circuit 2 — Pompes', detail: '4×15-20 · Repos 45s', sets: 4, note: 'Varier : larges / serrées / inclinées sur chaise' },
+      { id: 'w3', name: 'Circuit 3 — Dips chaise', detail: '4×12 · Triceps', sets: 4, note: 'Jambes tendues pour plus de difficulté' },
+      { id: 'w4', name: 'Circuit 4 — Traction porte', detail: '3×8-10 · Grand dos', sets: 3, note: 'Barre de traction encadrure de porte' },
+      { id: 'w5', name: 'Circuit 5 — Squats', detail: '4×20 · Tempo 3-1-3', sets: 4, note: 'Tempo lent, full amplitude' },
+      { id: 'w6', name: 'Circuit 6 — Gainage', detail: '3×45s planche + variantes', sets: 3, note: 'Planche frontale, latérale G/D' },
+      { id: 'w7', name: 'Circuit 7 — Burpees', detail: '3×10 · Cardio intensif', sets: 3, note: 'Saut complet en haut' },
+      { id: 'w8', name: 'Circuit 8 — Fentes', detail: '3×12 chaque jambe', sets: 3, note: 'Marche avant ou sur place' },
     ]
   }
-};
+}
 
-export const GYM_PROGRAM = {
-  "Upper Body": {
-    type: "gym",
-    exercises: [
-      { name: "Tractions neutres + Dév couché neutre (superset)", reps: "8+8", sets: 3, rest: "2'30" },
-      { name: "Dév incliné haltères + Rowing rotation haltères (superset)", reps: "8+8", sets: 3, rest: "1'30" },
-      { name: "Dév incliné unilatéral genoux", reps: 10, sets: 3, rest: "1'15" },
-      { name: "Bûcheron poulie basse", reps: 10, sets: 3, rest: "1'15" },
-      { name: "Élévations latérales poulies basses", reps: 10, sets: 3, rest: "1'30" },
-      { name: "EF disque + Oiseaux haltères (superset)", reps: "12+12", sets: 3, rest: "1'15" },
-      { name: "Biceps curl rotation + Dips (superset)", reps: "10+10", sets: 3, rest: "1'15" },
-      { name: "Cardio HIIT (rameur/burpees)", reps: "3 min", sets: 1, rest: "-" }
-    ]
-  },
-  "Lower Body": {
-    type: "gym",
-    exercises: [
-      { name: "Squat barre", reps: "6-8", sets: 3, rest: "2'30" },
-      { name: "Fentes marchées", reps: "8/côté", sets: 3, rest: "2'" },
-      { name: "Presse à cuisses", reps: 10, sets: 3, rest: "1'30" },
-      { name: "Leg extension + Sissy + Cuisse prière (tri-set)", reps: "8+8+8", sets: 3, rest: "1'30" },
-      { name: "Mollet debout machine", reps: 10, sets: 3, rest: "1'30" },
-      { name: "Donkey calves", reps: 10, sets: 3, rest: "1'30" },
-      { name: "Ab wheel", reps: 10, sets: 3, rest: "1'" },
-      { name: "Cardio HIIT", reps: "3 min", sets: 1, rest: "-" }
-    ]
-  },
-  "Push (PPL)": {
-    type: "gym",
-    exercises: [
-      { name: "Dév incliné haltères", reps: "10/8/6", sets: 3, rest: "2'" },
-      { name: "Dév couché barre", reps: "10/8/6", sets: 3, rest: "2'" },
-      { name: "Écarté incliné haltères", reps: 12, sets: 3, rest: "1'15" },
-      { name: "Dév épaules militaire", reps: "10/8/6", sets: 3, rest: "1'30" },
-      { name: "Élévations latérales", reps: 12, sets: 4, rest: "1'15" },
-      { name: "Triceps extension corde", reps: 15, sets: 4, rest: "1'30" },
-      { name: "Pompes diamants max", reps: "max", sets: 3, rest: "1'" }
-    ]
-  },
-  "Pull (PPL)": {
-    type: "gym",
-    exercises: [
-      { name: "Tractions pronation", reps: "10/8/6", sets: 3, rest: "2'" },
-      { name: "Rowing barre", reps: "10/8/6", sets: 3, rest: "2'" },
-      { name: "Tirage vertical machine", reps: 12, sets: 3, rest: "1'30" },
-      { name: "Bûcheron poulie haute", reps: 12, sets: 3, rest: "1'15" },
-      { name: "Oiseaux haltères", reps: 12, sets: 4, rest: "1'15" },
-      { name: "Biceps curl barre", reps: 15, sets: 3, rest: "1'30" }
-    ]
-  }
-};
+// ─── ALIMENTS ─────────────────────────────────────────────────
+export const FOODS = [
+  { id: 1, name: 'Pâtes protéinées (100g)', kcal: 352, p: 14, g: 64, l: 3, cat: 'Féculents' },
+  { id: 2, name: 'Escalope de poulet (100g)', kcal: 110, p: 23, g: 0, l: 2, cat: 'Viandes' },
+  { id: 3, name: 'Œuf entier', kcal: 76, p: 6.3, g: 0.4, l: 5.1, cat: 'Œufs' },
+  { id: 4, name: 'Riz blanc cuit (100g)', kcal: 130, p: 2.7, g: 28, l: 0.3, cat: 'Féculents' },
+  { id: 5, name: 'Filet de saumon (100g)', kcal: 208, p: 20, g: 0, l: 13, cat: 'Poissons' },
+  { id: 6, name: 'Steak haché 5% (100g)', kcal: 121, p: 21, g: 0, l: 4, cat: 'Viandes' },
+  { id: 7, name: 'Patate douce (100g)', kcal: 86, p: 1.6, g: 20, l: 0.1, cat: 'Féculents' },
+  { id: 8, name: 'Amandes (30g)', kcal: 175, p: 6, g: 6, l: 15, cat: 'Oléagineux' },
+  { id: 9, name: 'Yaourt grec 0% (100g)', kcal: 59, p: 10, g: 4, l: 0.4, cat: 'Laitiers' },
+  { id: 10, name: 'Fromage blanc 0% (100g)', kcal: 45, p: 8, g: 3, l: 0.2, cat: 'Laitiers' },
+  { id: 11, name: 'Banane (1 moyenne)', kcal: 89, p: 1.1, g: 23, l: 0.3, cat: 'Fruits' },
+  { id: 12, name: 'Pain complet (1 tranche)', kcal: 80, p: 4, g: 15, l: 1, cat: 'Féculents' },
+  { id: 13, name: 'Thon en conserve (100g)', kcal: 116, p: 26, g: 0, l: 1, cat: 'Poissons' },
+  { id: 14, name: 'Blanc de dinde (100g)', kcal: 104, p: 22, g: 0, l: 1.6, cat: 'Viandes' },
+  { id: 15, name: 'Flocons d\'avoine (50g)', kcal: 189, p: 6.5, g: 32, l: 3.5, cat: 'Féculents' },
+  { id: 16, name: 'Lentilles cuites (100g)', kcal: 116, p: 9, g: 20, l: 0.4, cat: 'Légumineuses' },
+  { id: 17, name: 'Noix de cajou (30g)', kcal: 168, p: 4.5, g: 9, l: 13, cat: 'Oléagineux' },
+  { id: 18, name: 'Whey protéine (30g)', kcal: 118, p: 24, g: 3, l: 1.5, cat: 'Suppléments' },
+  { id: 19, name: 'Crevettes cuites (100g)', kcal: 99, p: 21, g: 0, l: 1.5, cat: 'Poissons' },
+  { id: 20, name: 'Brocoli cuit (100g)', kcal: 28, p: 2.8, g: 4, l: 0.4, cat: 'Légumes' },
+  { id: 21, name: 'Épinards (100g)', kcal: 23, p: 2.9, g: 3.6, l: 0.4, cat: 'Légumes' },
+  { id: 22, name: 'Huile d\'olive (10ml)', kcal: 90, p: 0, g: 0, l: 10, cat: 'Matières grasses' },
+  { id: 23, name: 'Mozzarella (30g)', kcal: 73, p: 5.5, g: 0.5, l: 5.5, cat: 'Laitiers' },
+  { id: 24, name: 'Quinoa cuit (100g)', kcal: 120, p: 4.4, g: 21, l: 1.9, cat: 'Féculents' },
+  { id: 25, name: 'Pomme de terre cuite (100g)', kcal: 77, p: 2, g: 17, l: 0.1, cat: 'Féculents' },
+]
 
+// ─── RECETTES ─────────────────────────────────────────────────
 export const RECIPES = [
   {
-    id: "lentilles-curry",
-    name: "Curry de lentilles corail haute protéine",
-    duration: "30 min",
-    portions: 2,
-    macros: { kcal: 794, p: 77, c: 52, l: 32 },
+    id: 1,
+    emoji: '🍗',
+    name: 'Bol pâtes protéinées au poulet',
+    desc: 'Ton repas principal — rapide, efficace, validé.',
+    time: '10 min',
+    kcal: 1452,
+    p: 142,
+    g: 230,
+    l: 14,
     ingredients: [
-      "100g lentilles corail",
-      "200g escalope de poulet",
-      "2 œufs durs",
-      "1 oignon rouge",
-      "4 gousses d'ail",
-      "1 cs huile olive",
-      "1 cs huile coco vierge",
-      "1.5 cc curcuma",
-      "1 cc paprika fumé",
-      "1 cc herbes de Provence",
-      "0.5 cc thym séché",
-      "1 cc poivre noir",
-      "0.5 citron (jus)",
-      "300ml eau"
+      '350g pâtes protéinées (sec)',
+      '200g escalope de poulet',
+      'Sel, herbes de Provence',
+      '10ml huile d\'olive',
     ],
     steps: [
-      "Rincer les lentilles 3-4 fois jusqu'à ce que l'eau soit claire",
-      "Cuire les œufs durs 9 min, refroidir dans glaçons",
-      "Saisir les dés de poulet 2-3 min par face à feu vif dans huile olive, réserver",
-      "Faire fondre huile coco, ajouter oignon + ail 4-5 min",
-      "Toaster les épices 60s sur les oignons",
-      "Ajouter lentilles + 300ml eau, cuire 15-17 min couvert feu doux",
-      "Réintégrer le poulet 3-4 min, finir avec citron"
+      'Cuire les pâtes al dente (8-9 min eau bouillante salée)',
+      'Cuire l\'escalope à la poêle avec un filet d\'huile, sel, herbes',
+      'Trancher le poulet, mélanger avec les pâtes égouttées',
+      'Optionnel : ajouter du parmesan ou du fromage blanc 0%',
     ]
   },
   {
-    id: "oeufs-poulet-haricots",
-    name: "Bowl protéiné poulet/haricots verts",
-    duration: "20 min",
-    portions: 1,
-    macros: { kcal: 520, p: 65, c: 25, l: 15 },
+    id: 2,
+    emoji: '🥚',
+    name: 'Omelette 5 œufs épinards-feta',
+    desc: 'Repas du soir rapide, riche en protéines et micronutriments.',
+    time: '7 min',
+    kcal: 420,
+    p: 38,
+    g: 4,
+    l: 27,
     ingredients: [
-      "200g poulet",
-      "200g haricots verts",
-      "2 œufs",
-      "1 oignon rouge",
-      "2 gousses d'ail",
-      "1 cs huile olive",
-      "Curcuma, paprika, herbes de Provence",
-      "Citron"
+      '5 œufs entiers',
+      '80g épinards frais',
+      '30g feta',
+      'Sel, poivre, piment doux',
     ],
     steps: [
-      "Cuire les haricots verts à la vapeur 10 min",
-      "Saisir le poulet en dés à feu vif",
-      "Ajouter oignon, ail, épices",
-      "Ajouter haricots, mélanger 2 min",
-      "Servir avec œufs au plat ou durs + jus de citron"
+      'Battre les œufs en omelette avec sel/poivre',
+      'Poêle chaude avec spray huile de coco',
+      'Verser les œufs, ajouter les épinards et la feta',
+      'Refermer l\'omelette, cuire 2-3 min à feu moyen',
     ]
   },
   {
-    id: "petit-dej-avoine",
-    name: "Petit-déj proteiné avoine cacao",
-    duration: "5 min",
-    portions: 1,
-    macros: { kcal: 720, p: 60, c: 90, l: 16 },
+    id: 3,
+    emoji: '🐟',
+    name: 'Saumon riz + légumes grillés',
+    desc: 'Repas équilibré riche en Oméga-3, parfait post-séance.',
+    time: '20 min',
+    kcal: 630,
+    p: 52,
+    g: 58,
+    l: 18,
     ingredients: [
-      "100g flocons d'avoine",
-      "30g cacao non sucré",
-      "35g whey isolate chocolat",
-      "1 banane",
-      "400ml lait demi-écrémé",
-      "2 œufs (à part)"
+      '200g filet de saumon',
+      '150g riz blanc (sec)',
+      '100g brocoli',
+      'Citron, ail, persil',
     ],
     steps: [
-      "Mixer avoine, cacao, whey, banane et lait au blender",
-      "Cuire les œufs (durs ou plat) à part",
-      "Consommer le shake + œufs"
+      'Cuire le riz (15 min eau bouillante)',
+      'Cuire le brocoli vapeur 5 min',
+      'Poêler le saumon 3-4 min / face avec ail',
+      'Dresser avec jus de citron et persil frais',
     ]
   },
   {
-    id: "lentilles-petit-pois",
-    name: "Lentilles aux petits pois et poulet",
-    duration: "35 min",
-    portions: 2,
-    macros: { kcal: 680, p: 70, c: 60, l: 18 },
+    id: 4,
+    emoji: '🥩',
+    name: 'Steak haché patate douce',
+    desc: 'Charge glucidique post-séance avec protéine de qualité.',
+    time: '20 min',
+    kcal: 590,
+    p: 47,
+    g: 62,
+    l: 14,
     ingredients: [
-      "150g lentilles corail",
-      "200g petits pois",
-      "300g poulet",
-      "1 oignon rouge",
-      "3 gousses d'ail",
-      "1 cs huile olive",
-      "Curcuma, paprika, thym, poivre",
-      "Citron"
+      '200g steak haché 5%',
+      '300g patate douce',
+      'Cumin, paprika, sel',
+      'Yaourt grec 0%',
     ],
     steps: [
-      "Rincer les lentilles",
-      "Saisir le poulet, réserver",
-      "Faire revenir oignon + ail dans huile olive",
-      "Toaster les épices 1 min",
-      "Ajouter lentilles + 400ml eau, cuire 15 min",
-      "Ajouter petits pois 5 min avant la fin",
-      "Réintégrer poulet, finir au citron"
+      'Cuire les patates douces en cubes 15 min four 200°',
+      'Façonner le steak avec cumin et paprika',
+      'Cuire le steak 3 min/face à feu vif',
+      'Servir avec une cuillère de yaourt grec',
     ]
-  }
-];
+  },
+  {
+    id: 5,
+    emoji: '🥗',
+    name: 'Bowl thon avocat quinoa',
+    desc: 'Repas froid préparable à l\'avance, top en semaine.',
+    time: '10 min',
+    kcal: 510,
+    p: 42,
+    g: 48,
+    l: 15,
+    ingredients: [
+      '160g thon en conserve (égoutté)',
+      '100g quinoa cuit',
+      '½ avocat',
+      'Citron, sauce soja, coriandre',
+    ],
+    steps: [
+      'Cuire le quinoa en avance (préparation batch)',
+      'Émietter le thon, couper l\'avocat en dés',
+      'Mélanger avec le quinoa refroidi',
+      'Assaisonner citron + sauce soja + coriandre',
+    ]
+  },
+]
 
-export const SHOPPING_LIST = {
-  "Protéines": [
-    { name: "Escalopes de poulet", qty: "1.5 kg", priority: "haute" },
-    { name: "Steaks 5% MG", qty: "500g", priority: "moyenne" },
-    { name: "Œufs (boîte 12)", qty: "x2", priority: "haute" },
-    { name: "Whey Isolate chocolat", qty: "1 pot 1kg", priority: "haute" },
-    { name: "Thon en boîte", qty: "x4", priority: "moyenne" }
+// ─── LISTE DE COURSES ──────────────────────────────────────────
+export const SHOPPING_ITEMS = {
+  'Protéines animales': [
+    { id: 's1', name: 'Escalopes de poulet', qty: '1.5 kg' },
+    { id: 's2', name: 'Œufs (plein air)', qty: '×18' },
+    { id: 's3', name: 'Steak haché 5%', qty: '500g' },
+    { id: 's4', name: 'Filet de saumon', qty: '400g' },
+    { id: 's5', name: 'Thon en conserve', qty: '×4 boîtes' },
+    { id: 's6', name: 'Blanc de dinde', qty: '300g' },
   ],
-  "Glucides": [
-    { name: "Flocons d'avoine", qty: "1 kg", priority: "haute" },
-    { name: "Lentilles corail", qty: "500g", priority: "haute" },
-    { name: "Pâtes protéinées", qty: "500g", priority: "haute" },
-    { name: "Riz basmati", qty: "1 kg", priority: "moyenne" },
-    { name: "Patates douces", qty: "1 kg", priority: "moyenne" }
+  'Féculents & céréales': [
+    { id: 's7', name: 'Pâtes protéinées Barilla+', qty: '1 kg' },
+    { id: 's8', name: 'Riz blanc', qty: '1 kg' },
+    { id: 's9', name: 'Patates douces', qty: '1.5 kg' },
+    { id: 's10', name: 'Flocons d\'avoine', qty: '500g' },
+    { id: 's11', name: 'Quinoa', qty: '500g' },
   ],
-  "Légumes": [
-    { name: "Haricots verts", qty: "1 kg", priority: "haute" },
-    { name: "Petits pois surgelés", qty: "500g", priority: "haute" },
-    { name: "Oignons rouges", qty: "1 kg", priority: "haute" },
-    { name: "Ail", qty: "2 têtes", priority: "haute" },
-    { name: "Poivrons rouges", qty: "4-5", priority: "moyenne" },
-    { name: "Citrons", qty: "5-6", priority: "haute" }
+  'Laitiers & œufs': [
+    { id: 's12', name: 'Yaourt grec 0%', qty: '×8 pots' },
+    { id: 's13', name: 'Fromage blanc 0%', qty: '500g' },
   ],
-  "Lipides & Lait": [
-    { name: "Huile olive vierge extra", qty: "500ml", priority: "haute" },
-    { name: "Huile de coco vierge", qty: "250ml", priority: "haute" },
-    { name: "Lait demi-écrémé", qty: "2L", priority: "haute" },
-    { name: "Amandes nature", qty: "250g", priority: "moyenne" }
+  'Légumes & fruits': [
+    { id: 's14', name: 'Épinards frais', qty: '300g' },
+    { id: 's15', name: 'Brocoli', qty: '500g' },
+    { id: 's16', name: 'Bananes', qty: '×6' },
+    { id: 's17', name: 'Citrons', qty: '×4' },
   ],
-  "Épices & Compléments": [
-    { name: "Curcuma moulu", qty: "100g", priority: "haute" },
-    { name: "Paprika fumé", qty: "100g", priority: "haute" },
-    { name: "Herbes de Provence", qty: "1 pot", priority: "moyenne" },
-    { name: "Thym séché", qty: "1 pot", priority: "moyenne" },
-    { name: "Poivre noir", qty: "1 moulin", priority: "haute" },
-    { name: "Cacao non sucré", qty: "200g", priority: "haute" },
-    { name: "Oméga-3", qty: "1 boîte", priority: "haute" },
-    { name: "Magnésium", qty: "1 boîte", priority: "haute" },
-    { name: "Multivitamines", qty: "1 boîte", priority: "haute" }
-  ]
-};
+  'Suppléments': [
+    { id: 's18', name: 'Oméga-3 (EPA/DHA)', qty: 'Restock si < 30j' },
+    { id: 's19', name: 'Magnésium bisglycinate', qty: 'Restock si < 30j' },
+    { id: 's20', name: 'Multivitamines', qty: 'Restock si < 30j' },
+    { id: 's21', name: 'Créatine monohydrate', qty: '500g (à envisager)' },
+  ],
+}
+
+// ─── OBJECTIFS ────────────────────────────────────────────────
+export const GOALS = {
+  weight: { current: 117, target: 103, start: 120 },
+  calories: 2500,
+  protein: 200,
+  sessions_per_week: 5,
+}
+
+// ─── PRs ──────────────────────────────────────────────────────
+export const INITIAL_PRS = {
+  squat: { current: 60, target: 100, label: 'Squat barre' },
+  bench: { current: 80, target: 120, label: 'Développé couché' },
+  rdl: { current: 90, target: 160, label: 'Soulevé de terre' },
+  ohp: { current: 50, target: 80, label: 'Développé militaire' },
+  row: { current: 70, target: 120, label: 'Rowing barre' },
+}

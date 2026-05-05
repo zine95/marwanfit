@@ -1,832 +1,980 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react'
+import { useStorage, todayKey, weekKey } from './store.js'
+import { PROGRAMS, FOODS, RECIPES, SHOPPING_ITEMS, GOALS, INITIAL_PRS } from './data.js'
 import {
-  Home, Dumbbell, Apple, ChefHat, ShoppingCart, TrendingUp,
-  Camera, Trash2, Check, Search, Award, Scale,
-  Flame, Beef, ChevronRight, X, ScanLine
-} from 'lucide-react';
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  BarChart, Bar, CartesianGrid
-} from 'recharts';
-import { Html5Qrcode } from 'html5-qrcode';
-import { FOOD_DB, WOLF_PROGRAM, GYM_PROGRAM, RECIPES, SHOPPING_LIST } from './data';
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts'
 
-// ===========================
-// HOOK PERSISTANCE localStorage
-// ===========================
-function useLocalState(key, initial) {
-  const [state, setState] = useState(() => {
-    try {
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : initial;
-    } catch { return initial; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(key, JSON.stringify(state)); } catch {}
-  }, [key, state]);
-  return [state, setState];
+// ─── ICONS ────────────────────────────────────────────────────
+const Icon = ({ d, size = 22, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+)
+
+const ICONS = {
+  home: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10',
+  dumbbell: 'M6.5 6.5L17.5 17.5M6.5 17.5L17.5 6.5M3 12h2m14 0h2M4 8l2 2m12-2l-2 2M4 16l2-2m12 2l-2-2',
+  food: 'M3 11l19-9-9 19-2-8-8-2z',
+  chart: 'M18 20V10M12 20V4M6 20v-6',
+  book: 'M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 014 17V4.5A2.5 2.5 0 016.5 2H20v17M4 19.5V22',
+  user: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 110 8 4 4 0 010-8z',
+  plus: 'M12 5v14M5 12h14',
+  check: 'M20 6L9 17l-5-5',
+  fire: 'M12 2c0 0-5 6-5 11a5 5 0 0010 0c0-5-5-11-5-11z',
+  target: 'M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z',
+  camera: 'M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z M12 17a4 4 0 100-8 4 4 0 000 8z',
+  trash: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',
+  settings: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z',
+  arrow_up: 'M12 19V5M5 12l7-7 7 7',
+  arrow_down: 'M12 5v14M5 12l7 7 7-7',
+  info: 'M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z M12 16v-4M12 8h.01',
 }
 
-// ===========================
-// API ANTHROPIC pour analyse photo
-// ===========================
-async function analyzePhotoWithClaude(base64, mimeType, apiKey) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-          { type: 'text', text: `Tu es un nutritionniste expert. Analyse cette assiette et estime précisément :
-1. Les aliments visibles avec leur quantité estimée en grammes
-2. Le mode de cuisson
-3. Les macros TOTALES du plat
-
-Réponds UNIQUEMENT en JSON valide sans markdown :
-{
-  "items": [{"name": "...", "grams": 0}],
-  "cooking": "...",
-  "total": {"kcal": 0, "p": 0, "c": 0, "l": 0},
-  "confidence": "haute|moyenne|basse"
-}` }
-        ]
-      }]
-    })
-  });
-  if (!response.ok) throw new Error('API error: ' + response.status);
-  const result = await response.json();
-  const text = result.content.filter(c => c.type === 'text').map(c => c.text).join('');
-  return JSON.parse(text.replace(/```json|```/g, '').trim());
-}
-
-// ===========================
-// API OPENFOODFACTS pour scan code-barres
-// ===========================
-async function fetchProductByBarcode(barcode) {
-  const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
-  const data = await res.json();
-  if (data.status !== 1 || !data.product) return null;
-  const p = data.product;
-  const n = p.nutriments || {};
-  return {
-    name: p.product_name || p.generic_name || 'Produit inconnu',
-    brand: p.brands || '',
-    image: p.image_url || p.image_front_url,
-    per100g: {
-      kcal: n['energy-kcal_100g'] || Math.round((n['energy_100g'] || 0) / 4.184),
-      p: n['proteins_100g'] || 0,
-      c: n['carbohydrates_100g'] || 0,
-      l: n['fat_100g'] || 0,
-      fiber: n['fiber_100g'] || 0,
-      sugar: n['sugars_100g'] || 0
-    },
-    nutriscore: p.nutriscore_grade,
-    barcode
-  };
-}
-
-// ===========================
-// UI COMPONENTS
-// ===========================
-function StatCard({ icon: Icon, label, value, sub, color = 'blue' }) {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-700',
-    green: 'bg-green-50 text-green-700',
-    orange: 'bg-orange-50 text-orange-700',
-    purple: 'bg-purple-50 text-purple-700',
-    red: 'bg-red-50 text-red-700'
-  };
+// ─── RING COMPONENT ───────────────────────────────────────────
+function Ring({ pct, value, label, sub, color }) {
+  const r = 30
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - Math.min(pct, 1))
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100">
-      <div className="flex items-center gap-2 mb-2">
-        <div className={`p-2 rounded-lg ${colors[color]}`}><Icon className="w-4 h-4" /></div>
-        <span className="text-xs text-gray-500 font-medium">{label}</span>
-      </div>
-      <div className="text-2xl font-semibold text-gray-900">{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
-    </div>
-  );
-}
-
-function MacroBar({ label, current, goal, color }) {
-  const pct = Math.min(100, Math.round((current / goal) * 100));
-  return (
-    <div className="mb-3">
-      <div className="flex justify-between text-xs mb-1">
-        <span className="text-gray-600 font-medium">{label}</span>
-        <span className="text-gray-900 font-semibold">{Math.round(current)}/{goal}g</span>
-      </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <svg width={76} height={76} viewBox="0 0 76 76">
+        <circle cx={38} cy={38} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={6} />
+        <circle
+          cx={38} cy={38} r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={6}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 38 38)"
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        />
+        <text x={38} y={42} textAnchor="middle" fill="var(--text)" fontSize={12} fontWeight={600} fontFamily="var(--font-display)">
+          {Math.round(pct * 100)}%
+        </text>
+      </svg>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 16, fontWeight: 600, fontFamily: 'var(--font-display)', color }}>{value}</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 1 }}>{label}</div>
+        <div style={{ fontSize: 10, color: 'var(--text3)' }}>{sub}</div>
       </div>
     </div>
-  );
+  )
 }
 
-// ===========================
-// SCANNER CODE-BARRES
-// ===========================
-function BarcodeScanner({ onScan, onClose }) {
-  const scannerRef = useRef(null);
-  const html5QrCode = useRef(null);
-
-  useEffect(() => {
-    const id = 'qr-reader';
-    html5QrCode.current = new Html5Qrcode(id);
-
-    html5QrCode.current.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 150 } },
-      (decoded) => {
-        html5QrCode.current.stop().then(() => onScan(decoded));
-      },
-      () => {}
-    ).catch(err => {
-      alert('Impossible d\'accéder à la caméra : ' + err.message);
-      onClose();
-    });
-
-    return () => {
-      if (html5QrCode.current?.isScanning) {
-        html5QrCode.current.stop().catch(() => {});
-      }
-    };
-  }, []);
-
+// ─── PROGRESS BAR ─────────────────────────────────────────────
+function ProgBar({ pct, color, height = 4 }) {
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      <div className="p-4 flex justify-between items-center text-white safe-top">
-        <div>
-          <h2 className="font-semibold">Scanner code-barres</h2>
-          <p className="text-xs text-gray-400">Place le code dans le cadre</p>
-        </div>
-        <button onClick={() => {
-          if (html5QrCode.current?.isScanning) html5QrCode.current.stop().catch(() => {});
-          onClose();
-        }} className="p-2"><X className="w-6 h-6" /></button>
-      </div>
-      <div id="qr-reader" ref={scannerRef} className="flex-1" />
+    <div style={{ height, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+      <div style={{
+        height: '100%', width: `${Math.min(pct * 100, 100)}%`,
+        background: color, borderRadius: 99,
+        transition: 'width 0.5s ease'
+      }} />
     </div>
-  );
+  )
 }
 
-// ===========================
-// HOME
-// ===========================
-function HomeView({ goals, meals, workouts, weight, setView }) {
-  const today = new Date().toISOString().split('T')[0];
-  const todays = meals.filter(m => m.date === today);
-  const macros = todays.reduce((a, m) => ({
-    kcal: a.kcal + (m.kcal || 0),
-    p: a.p + (m.p || 0),
-    c: a.c + (m.c || 0),
-    l: a.l + (m.l || 0)
-  }), { kcal: 0, p: 0, c: 0, l: 0 });
-  const lastWeight = weight[weight.length - 1]?.value || '-';
-  const todaysWorkouts = workouts.filter(w => w.date === today).length;
+// ─── CHIP ─────────────────────────────────────────────────────
+function Chip({ label, color = 'var(--text2)', bg = 'var(--bg4)' }) {
+  return (
+    <span style={{
+      fontSize: 11, padding: '3px 9px', borderRadius: 99,
+      background: bg, color, fontWeight: 500, whiteSpace: 'nowrap'
+    }}>{label}</span>
+  )
+}
+
+// ─── CARD ─────────────────────────────────────────────────────
+function Card({ children, style = {}, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: 'var(--bg3)', border: '1px solid var(--border)',
+        borderRadius: 'var(--r)', padding: '16px',
+        marginBottom: 12, ...(onClick ? { cursor: 'pointer' } : {}), ...style
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+// ─── SECTION TITLE ────────────────────────────────────────────
+function SecTitle({ children, style = {} }) {
+  return (
+    <div style={{
+      fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase',
+      letterSpacing: '1.5px', fontWeight: 600, marginBottom: 10,
+      fontFamily: 'var(--font-display)', ...style
+    }}>{children}</div>
+  )
+}
+
+// ─── BTN ──────────────────────────────────────────────────────
+function Btn({ children, onClick, style = {}, variant = 'primary' }) {
+  const base = {
+    padding: '11px 20px', borderRadius: 'var(--r-sm)', fontSize: 14,
+    fontWeight: 500, fontFamily: 'var(--font-body)', cursor: 'pointer',
+    transition: 'opacity 0.15s', border: 'none', display: 'inline-flex',
+    alignItems: 'center', gap: 6
+  }
+  const variants = {
+    primary: { background: 'var(--accent)', color: '#fff' },
+    ghost: { background: 'var(--bg4)', color: 'var(--text)', border: '1px solid var(--border)' },
+    danger: { background: 'var(--accent4-dim)', color: 'var(--accent4)', border: '1px solid rgba(255,107,138,0.2)' },
+  }
+  return <button style={{ ...base, ...variants[variant], ...style }} onClick={onClick}>{children}</button>
+}
+
+// ─── HOME PAGE ────────────────────────────────────────────────
+function HomePage({ todayLog, setPage, weights, sessionsDone }) {
+  const today = todayKey()
+  const todayEntry = todayLog[today] || { kcal: 0, p: 0, g: 0, l: 0, items: [] }
+  const totalKcal = todayEntry.items?.reduce((s, i) => s + i.kcal, 0) || 0
+  const totalP = todayEntry.items?.reduce((s, i) => s + i.p, 0) || 0
+  const thisWeek = sessionsDone[weekKey()] || []
+
+  const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+  const now = new Date()
+  const todayIdx = (now.getDay() + 6) % 7
+
+  const currentWeight = weights.length > 0 ? weights[weights.length - 1].w : GOALS.weight.current
+  const weightToLose = currentWeight - GOALS.weight.target
 
   return (
-    <div className="p-4 pb-28 safe-top">
-      <div className="mb-6">
-        <p className="text-sm text-gray-500">Salut Marwan</p>
-        <h1 className="text-2xl font-bold text-gray-900 capitalize">
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      {/* Hero */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1a1230 0%, #0f1628 50%, #0a1a20 100%)',
+        border: '1px solid var(--border)', borderRadius: 'var(--r-lg)',
+        padding: '20px', marginBottom: 16, position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute', top: -50, right: -50, width: 160, height: 160,
+          background: 'var(--accent)', opacity: 0.07, borderRadius: '50%'
+        }} />
+        <div style={{
+          position: 'absolute', bottom: -40, left: -20, width: 100, height: 100,
+          background: 'var(--accent2)', opacity: 0.06, borderRadius: '50%'
+        }} />
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </h1>
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: 16 }}>
+          Prêt, Marwan? 💪
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+          {[
+            { val: currentWeight.toFixed(1), lbl: 'kg actuel', color: 'var(--accent)' },
+            { val: GOALS.weight.target, lbl: 'kg objectif', color: 'var(--accent2)' },
+            { val: weightToLose.toFixed(1), lbl: 'kg à perdre', color: 'var(--accent3)' },
+          ].map(s => (
+            <div key={s.lbl} style={{
+              background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--r-sm)', padding: '10px 8px'
+            }}>
+              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: s.color }}>{s.val}</div>
+              <div style={{ fontSize: 11, color: 'var(--text2)' }}>{s.lbl}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard icon={Flame} label="Calories" value={Math.round(macros.kcal)} sub={`/ ${goals.kcal} kcal`} color="orange" />
-        <StatCard icon={Scale} label="Poids" value={`${lastWeight}kg`} sub="dernière pesée" color="blue" />
-        <StatCard icon={Beef} label="Protéines" value={`${Math.round(macros.p)}g`} sub={`/ ${goals.p}g`} color="red" />
-        <StatCard icon={Dumbbell} label="Séances" value={todaysWorkouts} sub="aujourd'hui" color="purple" />
+      {/* Streak */}
+      <SecTitle>Séances cette semaine ({thisWeek.length}/{GOALS.sessions_per_week})</SecTitle>
+      <div style={{ display: 'flex', gap: 5, marginBottom: 16 }}>
+        {days.map((d, i) => (
+          <div key={d} style={{
+            flex: 1, background: thisWeek.includes(i) ? 'var(--accent2-dim)' : 'var(--bg3)',
+            border: `1px solid ${i === todayIdx ? 'var(--accent)' : thisWeek.includes(i) ? 'rgba(77,232,176,0.3)' : 'var(--border)'}`,
+            borderRadius: 'var(--r-sm)', padding: '7px 3px', textAlign: 'center'
+          }}>
+            <div style={{ fontSize: 10, color: 'var(--text2)', marginBottom: 4 }}>{d}</div>
+            <div style={{
+              width: 7, height: 7, borderRadius: '50%', margin: '0 auto',
+              background: thisWeek.includes(i) ? 'var(--accent2)' : i === todayIdx ? 'var(--accent)' : 'var(--text3)'
+            }} />
+          </div>
+        ))}
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Apple className="w-4 h-4 text-green-600" /> Macros du jour
-        </h3>
-        <MacroBar label="Protéines" current={macros.p} goal={goals.p} color="bg-red-500" />
-        <MacroBar label="Glucides" current={macros.c} goal={goals.c} color="bg-amber-500" />
-        <MacroBar label="Lipides" current={macros.l} goal={goals.l} color="bg-blue-500" />
-      </div>
+      {/* Rings */}
+      <Card style={{ display: 'flex', justifyContent: 'space-around', padding: '16px 8px' }}>
+        <Ring pct={totalKcal / GOALS.calories} value={`${Math.round(totalKcal)}`} label="kcal" sub={`/${GOALS.calories}`} color="var(--accent3)" />
+        <Ring pct={totalP / GOALS.protein} value={`${Math.round(totalP)}g`} label="protéines" sub={`/${GOALS.protein}g`} color="var(--blue)" />
+        <Ring pct={thisWeek.length / GOALS.sessions_per_week} value={`${thisWeek.length}/${GOALS.sessions_per_week}`} label="séances" sub="cette sem." color="var(--accent)" />
+      </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => setView('nutrition')} className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-4 text-left active:scale-95 transition">
-          <Apple className="w-5 h-5 mb-2" />
-          <div className="font-semibold">Ajouter repas</div>
-          <div className="text-xs opacity-80">Photo / Scan / Manuel</div>
-        </button>
-        <button onClick={() => setView('workout')} className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-4 text-left active:scale-95 transition">
-          <Dumbbell className="w-5 h-5 mb-2" />
-          <div className="font-semibold">Démarrer séance</div>
-          <div className="text-xs opacity-80">Wolf / Salle</div>
-        </button>
+      {/* Quick actions */}
+      <SecTitle>Actions rapides</SecTitle>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        {[
+          { emoji: '🏋️', title: 'Séance du jour', sub: 'Programme PPL', page: 'workout', color: 'var(--accent)' },
+          { emoji: '🍽️', title: 'Nutrition', sub: `${Math.round(totalKcal)} / ${GOALS.calories} kcal`, page: 'nutrition', color: 'var(--accent3)' },
+          { emoji: '📈', title: 'Progression', sub: `−${(GOALS.weight.current - currentWeight).toFixed(1)} kg`, page: 'progress', color: 'var(--accent2)' },
+          { emoji: '🥗', title: 'Recettes', sub: 'Haute protéine', page: 'recipes', color: 'var(--accent4)' },
+        ].map(a => (
+          <div key={a.page} onClick={() => setPage(a.page)} style={{
+            background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 'var(--r)',
+            padding: 14, cursor: 'pointer', transition: 'border-color 0.15s'
+          }}>
+            <div style={{ fontSize: 26, marginBottom: 8 }}>{a.emoji}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-display)', marginBottom: 2 }}>{a.title}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>{a.sub}</div>
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
 
-// ===========================
-// NUTRITION (recherche + photo + scan)
-// ===========================
-function NutritionView({ apiKey, meals, setMeals }) {
-  const [mode, setMode] = useState('search'); // search | photo | scan
-  const [search, setSearch] = useState('');
-  const [grams, setGrams] = useState(100);
-  const [selected, setSelected] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [photoResult, setPhotoResult] = useState(null);
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState(null);
-  const fileRef = useRef(null);
-  const today = new Date().toISOString().split('T')[0];
-  const todays = meals.filter(m => m.date === today);
+// ─── WORKOUT PAGE ─────────────────────────────────────────────
+function WorkoutPage({ sessionSets, setSessionSets, sessionsDone, setSessionsDone }) {
+  const [tab, setTab] = useState('push')
+  const prog = PROGRAMS[tab]
+  const today = todayKey()
+  const wk = weekKey()
 
-  const filtered = Object.entries(FOOD_DB).filter(([n]) =>
-    n.toLowerCase().includes(search.toLowerCase())
-  );
+  function toggleSet(exId, setIdx) {
+    const key = `${tab}_${today}`
+    const cur = sessionSets[key] || {}
+    const exSets = cur[exId] ? [...cur[exId]] : Array(PROGRAMS[tab].exercises.find(e => e.id === exId)?.sets || 4).fill(false)
+    exSets[setIdx] = !exSets[setIdx]
+    const updated = { ...cur, [exId]: exSets }
+    setSessionSets({ ...sessionSets, [key]: updated })
 
-  function addFromDB() {
-    if (!selected) return;
-    const f = FOOD_DB[selected];
-    const factor = (f.unit === 'g' || f.unit === 'ml') ? grams / 100 : grams;
-    setMeals(prev => [...prev, {
-      date: today,
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      name: selected,
-      grams,
-      kcal: Math.round(f.kcal * factor),
-      p: +(f.p * factor).toFixed(1),
-      c: +(f.c * factor).toFixed(1),
-      l: +(f.l * factor).toFixed(1)
-    }]);
-    setSelected(null); setSearch(''); setGrams(100);
-  }
-
-  async function handlePhoto(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!apiKey) { alert('Configure ta clé API Anthropic dans les Paramètres'); return; }
-    setAnalyzing(true); setPhotoResult(null);
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const base64 = evt.target.result.split(',')[1];
-        const result = await analyzePhotoWithClaude(base64, file.type, apiKey);
-        setPhotoResult(result);
-      } catch (err) {
-        setPhotoResult({ error: 'Erreur analyse: ' + err.message });
-      } finally { setAnalyzing(false); }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function confirmPhoto() {
-    if (!photoResult || photoResult.error) return;
-    setMeals(prev => [...prev, {
-      date: today,
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      name: photoResult.items.map(i => `${i.name} (${i.grams}g)`).join(' + '),
-      grams: 0,
-      kcal: photoResult.total.kcal,
-      p: photoResult.total.p,
-      c: photoResult.total.c,
-      l: photoResult.total.l,
-      fromPhoto: true
-    }]);
-    setPhotoResult(null); setMode('search');
-  }
-
-  async function handleScan(barcode) {
-    setScannerOpen(false);
-    try {
-      const product = await fetchProductByBarcode(barcode);
-      if (!product) { alert('Produit non trouvé dans OpenFoodFacts'); return; }
-      setScannedProduct({ ...product, qty: 100 });
-    } catch (err) {
-      alert('Erreur: ' + err.message);
+    // mark day done if any set completed
+    const allDone = Object.values(updated).some(sets => sets.some(Boolean))
+    const todayDayIdx = (new Date().getDay() + 6) % 7
+    if (allDone) {
+      const wkDays = sessionsDone[wk] || []
+      if (!wkDays.includes(todayDayIdx)) {
+        setSessionsDone({ ...sessionsDone, [wk]: [...wkDays, todayDayIdx] })
+      }
     }
   }
 
-  function addScanned() {
-    if (!scannedProduct) return;
-    const factor = scannedProduct.qty / 100;
-    setMeals(prev => [...prev, {
-      date: today,
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      name: `${scannedProduct.name}${scannedProduct.brand ? ` (${scannedProduct.brand})` : ''}`,
-      grams: scannedProduct.qty,
-      kcal: Math.round(scannedProduct.per100g.kcal * factor),
-      p: +(scannedProduct.per100g.p * factor).toFixed(1),
-      c: +(scannedProduct.per100g.c * factor).toFixed(1),
-      l: +(scannedProduct.per100g.l * factor).toFixed(1),
-      fromScan: true
-    }]);
-    setScannedProduct(null);
+  const key = `${tab}_${today}`
+  const curSets = sessionSets[key] || {}
+
+  const totalSets = prog.exercises.reduce((s, e) => s + e.sets, 0)
+  const doneSets = Object.values(curSets).reduce((s, sets) => s + sets.filter(Boolean).length, 0)
+
+  return (
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--bg2)', padding: 4, borderRadius: 'var(--r-sm)' }}>
+        {Object.entries(PROGRAMS).map(([k, p]) => (
+          <button key={k} onClick={() => setTab(k)} style={{
+            flex: 1, padding: '8px 4px', borderRadius: 6, border: 'none',
+            background: tab === k ? 'var(--bg5)' : 'transparent',
+            color: tab === k ? 'var(--text)' : 'var(--text2)',
+            fontSize: 13, fontWeight: tab === k ? 600 : 400, cursor: 'pointer',
+            fontFamily: 'var(--font-display)', transition: 'all .15s'
+          }}>{p.label}</button>
+        ))}
+      </div>
+
+      {/* Program header */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-display)', color: prog.color }}>{prog.label}</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{prog.days}</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: prog.color }}>{doneSets}/{totalSets}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>séries</div>
+          </div>
+        </div>
+        <ProgBar pct={doneSets / totalSets} color={prog.color} height={3} />
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+          {prog.muscles.map(m => (
+            <span key={m} style={{
+              fontSize: 11, padding: '3px 9px', borderRadius: 99,
+              background: 'var(--bg4)', color: 'var(--text2)', border: '1px solid var(--border)'
+            }}>{m}</span>
+          ))}
+        </div>
+      </Card>
+
+      {/* Exercises */}
+      {prog.exercises.map(ex => {
+        const exSets = curSets[ex.id] || Array(ex.sets).fill(false)
+        const doneCount = exSets.filter(Boolean).length
+        return (
+          <Card key={ex.id} style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{ex.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)' }}>{ex.detail}</div>
+              </div>
+              <div style={{ fontSize: 12, color: doneCount === ex.sets ? 'var(--accent2)' : 'var(--text3)', marginLeft: 8 }}>
+                {doneCount}/{ex.sets}
+              </div>
+            </div>
+            {ex.note && (
+              <div style={{
+                fontSize: 11, color: 'var(--text3)', background: 'var(--bg4)',
+                borderRadius: 6, padding: '5px 9px', marginBottom: 10,
+                borderLeft: `2px solid ${prog.color}`
+              }}>
+                💡 {ex.note}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {Array(ex.sets).fill(0).map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => toggleSet(ex.id, i)}
+                  style={{
+                    width: 36, height: 36, borderRadius: 8, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: exSets[i] ? 16 : 13, fontWeight: 600,
+                    background: exSets[i] ? `${prog.color}22` : 'var(--bg4)',
+                    border: `1px solid ${exSets[i] ? prog.color : 'var(--border)'}`,
+                    color: exSets[i] ? prog.color : 'var(--text2)',
+                    transition: 'all .15s'
+                  }}
+                >
+                  {exSets[i] ? '✓' : i + 1}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── NUTRITION PAGE ───────────────────────────────────────────
+function NutritionPage({ todayLog, setTodayLog, apiKey }) {
+  const [search, setSearch] = useState('')
+  const [mode, setMode] = useState('search')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult] = useState(null)
+  const fileRef = useRef()
+  const today = todayKey()
+  const entry = todayLog[today] || { items: [] }
+
+  const totalKcal = entry.items?.reduce((s, i) => s + i.kcal, 0) || 0
+  const totalP = entry.items?.reduce((s, i) => s + i.p, 0) || 0
+  const totalG = entry.items?.reduce((s, i) => s + i.g, 0) || 0
+  const totalL = entry.items?.reduce((s, i) => s + i.l, 0) || 0
+
+  const results = search.length > 1
+    ? FOODS.filter(f => f.name.toLowerCase().includes(search.toLowerCase())).slice(0, 6)
+    : []
+
+  function addFood(food, multiplier = 1) {
+    const item = {
+      id: Date.now(),
+      name: food.name,
+      kcal: Math.round(food.kcal * multiplier),
+      p: Math.round(food.p * multiplier),
+      g: Math.round(food.g * multiplier),
+      l: Math.round(food.l * multiplier),
+      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    }
+    const updated = { ...todayLog, [today]: { items: [...(entry.items || []), item] } }
+    setTodayLog(updated)
+    setSearch('')
+  }
+
+  function removeItem(id) {
+    const updated = { ...todayLog, [today]: { items: entry.items.filter(i => i.id !== id) } }
+    setTodayLog(updated)
+  }
+
+  async function analyzePhoto(e) {
+    const file = e.target.files?.[0]
+    if (!file || !apiKey) return
+    setAiLoading(true)
+    setAiResult(null)
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader()
+        r.onload = () => res(r.result.split(',')[1])
+        r.onerror = rej
+        r.readAsDataURL(file)
+      })
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-opus-4-6',
+          max_tokens: 400,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: file.type, data: base64 } },
+              { type: 'text', text: 'Analyse ce repas. Réponds UNIQUEMENT en JSON strict: {"name":"...","kcal":0,"p":0,"g":0,"l":0}. Valeurs en grammes, kcal en entier.' }
+            ]
+          }]
+        })
+      })
+      const data = await resp.json()
+      const text = data.content?.[0]?.text || '{}'
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+      setAiResult(parsed)
+    } catch (err) {
+      setAiResult({ error: 'Erreur analyse. Vérifie ta clé API.' })
+    }
+    setAiLoading(false)
   }
 
   return (
-    <div className="p-4 pb-28 safe-top">
-      {scannerOpen && <BarcodeScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />}
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      {/* Calorie bar */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-display)' }}>{Math.round(totalKcal)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>consommé</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>{GOALS.calories - Math.round(totalKcal)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>restant</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--text2)' }}>{GOALS.calories}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>objectif</div>
+          </div>
+        </div>
+        <ProgBar pct={totalKcal / GOALS.calories} color="linear-gradient(90deg,var(--accent),var(--accent2))" height={6} />
+      </Card>
 
-      <h1 className="text-2xl font-bold mb-1">Nutrition</h1>
-      <p className="text-sm text-gray-500 mb-4">Recherche, scan ou photo</p>
+      {/* Macros */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }}>
+        {[
+          { val: `${Math.round(totalP)}g`, lbl: 'Protéines', target: GOALS.protein, color: 'var(--blue)' },
+          { val: `${Math.round(totalG)}g`, lbl: 'Glucides', target: 300, color: 'var(--accent3)' },
+          { val: `${Math.round(totalL)}g`, lbl: 'Lipides', target: 80, color: 'var(--accent2)' },
+        ].map(m => (
+          <div key={m.lbl} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '10px 8px', textAlign: 'center' }}>
+            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: 'var(--font-display)', color: m.color }}>{m.val}</div>
+            <div style={{ fontSize: 10, color: 'var(--text2)', marginBottom: 6 }}>{m.lbl}</div>
+            <ProgBar pct={(parseFloat(m.val) / m.target)} color={m.color} height={3} />
+          </div>
+        ))}
+      </div>
 
-      <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
-        {[['search', 'Recherche'], ['photo', '📸 Photo'], ['scan', '⊞ Scan']].map(([k, l]) => (
-          <button key={k} onClick={() => setMode(k)} className={`flex-1 py-2 rounded-lg font-medium text-sm ${mode === k ? 'bg-white shadow-sm' : 'text-gray-600'}`}>{l}</button>
+      {/* Mode selector */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {[
+          { id: 'search', label: '🔍 Recherche' },
+          { id: 'photo', label: '📸 Photo IA' },
+        ].map(m => (
+          <button key={m.id} onClick={() => setMode(m.id)} style={{
+            padding: '7px 14px', borderRadius: 99, border: '1px solid var(--border)',
+            background: mode === m.id ? 'var(--accent)' : 'var(--bg3)',
+            color: mode === m.id ? '#fff' : 'var(--text2)',
+            fontSize: 13, cursor: 'pointer', transition: 'all .15s'
+          }}>{m.label}</button>
         ))}
       </div>
 
       {mode === 'search' && (
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-          <div className="relative mb-3">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm" />
-          </div>
-          {search && (
-            <div className="max-h-48 overflow-y-auto mb-3">
-              {filtered.slice(0, 8).map(([n, f]) => (
-                <button key={n} onClick={() => setSelected(n)} className={`w-full text-left p-2 rounded-lg text-sm mb-1 ${selected === n ? 'bg-blue-50 text-blue-700' : ''}`}>
-                  <div className="font-medium">{n}</div>
-                  <div className="text-xs text-gray-500">{f.kcal}k • {f.p}P • {f.c}G • {f.l}L /100{f.unit}</div>
-                </button>
-              ))}
-            </div>
-          )}
-          {selected && (
-            <div className="border-t pt-3">
-              <label className="text-xs text-gray-500">Quantité ({FOOD_DB[selected].unit})</label>
-              <div className="flex gap-2 items-center mt-1">
-                <input type="number" value={grams} onChange={e => setGrams(Number(e.target.value))} className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm" />
-                <button onClick={addFromDB} className="bg-gray-900 text-white px-4 py-2 rounded-xl font-medium text-sm">+ Ajouter</button>
+        <Card>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Chercher un aliment..."
+            style={{
+              width: '100%', background: 'var(--bg4)', border: '1px solid var(--border)',
+              borderRadius: 'var(--r-sm)', padding: '10px 12px', color: 'var(--text)',
+              fontSize: 14
+            }}
+          />
+          {results.map(f => (
+            <div key={f.id} onClick={() => addFood(f)} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '10px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer'
+            }}>
+              <div>
+                <div style={{ fontSize: 14 }}>{f.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{f.p}g prot · {f.g}g gluc · {f.l}g lip</div>
               </div>
+              <div style={{ fontSize: 14, color: 'var(--accent3)', fontWeight: 600 }}>+{f.kcal} kcal</div>
             </div>
-          )}
-        </div>
+          ))}
+        </Card>
       )}
 
       {mode === 'photo' && (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
-          {!photoResult && !analyzing && (
-            <button onClick={() => fileRef.current?.click()} className="w-full py-12 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2">
-              <Camera className="w-8 h-8 text-gray-400" />
-              <span className="text-sm font-medium">Photo de l'assiette</span>
-              <span className="text-xs text-gray-400">Claude va l'analyser</span>
-            </button>
-          )}
-          {analyzing && (
-            <div className="py-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-3"></div>
-              <p className="text-sm">Analyse en cours...</p>
+        <Card>
+          {!apiKey && (
+            <div style={{ fontSize: 13, color: 'var(--accent4)', marginBottom: 10, padding: '8px', background: 'var(--accent4-dim)', borderRadius: 8 }}>
+              ⚠️ Configure ta clé API Anthropic dans Profil → Paramètres
             </div>
           )}
-          {photoResult && !photoResult.error && (
-            <div>
-              <h3 className="font-semibold mb-3">Résultat (confiance: {photoResult.confidence})</h3>
-              <div className="bg-gray-50 rounded-xl p-3 mb-3 text-sm">
-                {photoResult.items.map((it, i) => <div key={i} className="text-gray-600">• {it.name} — {it.grams}g</div>)}
-                <div className="text-xs text-gray-500 mt-2">Cuisson: {photoResult.cooking}</div>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={analyzePhoto} />
+          <Btn onClick={() => fileRef.current?.click()} style={{ width: '100%', justifyContent: 'center', marginBottom: 10 }}>
+            📸 Prendre une photo du plat
+          </Btn>
+          {aiLoading && <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 13 }}>Analyse en cours...</div>}
+          {aiResult && !aiResult.error && (
+            <div style={{ background: 'var(--bg4)', borderRadius: 8, padding: 12 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{aiResult.name}</div>
+              <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 10 }}>
+                {aiResult.p}g prot · {aiResult.g}g gluc · {aiResult.l}g lip
               </div>
-              <div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">
-                <div className="bg-orange-50 rounded-lg p-2"><div className="font-bold text-orange-700">{photoResult.total.kcal}</div><div className="text-orange-600">kcal</div></div>
-                <div className="bg-red-50 rounded-lg p-2"><div className="font-bold text-red-700">{photoResult.total.p}g</div><div className="text-red-600">prot</div></div>
-                <div className="bg-amber-50 rounded-lg p-2"><div className="font-bold text-amber-700">{photoResult.total.c}g</div><div className="text-amber-600">gluc</div></div>
-                <div className="bg-blue-50 rounded-lg p-2"><div className="font-bold text-blue-700">{photoResult.total.l}g</div><div className="text-blue-600">lip</div></div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={confirmPhoto} className="flex-1 bg-green-600 text-white py-2 rounded-xl font-medium">✓ Ajouter</button>
-                <button onClick={() => setPhotoResult(null)} className="px-4 bg-gray-100 rounded-xl">Annuler</button>
-              </div>
+              <Btn onClick={() => { addFood(aiResult, 1); setAiResult(null) }} style={{ width: '100%', justifyContent: 'center' }}>
+                Ajouter {aiResult.kcal} kcal
+              </Btn>
             </div>
           )}
-          {photoResult?.error && (
-            <div className="text-center py-6">
-              <p className="text-red-600 mb-3 text-sm">{photoResult.error}</p>
-              <button onClick={() => setPhotoResult(null)} className="px-4 py-2 bg-gray-100 rounded-xl">Réessayer</button>
-            </div>
-          )}
-        </div>
+          {aiResult?.error && <div style={{ color: 'var(--accent4)', fontSize: 13 }}>{aiResult.error}</div>}
+        </Card>
       )}
 
-      {mode === 'scan' && (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 mb-4">
-          {!scannedProduct ? (
-            <button onClick={() => setScannerOpen(true)} className="w-full py-12 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2">
-              <ScanLine className="w-8 h-8 text-gray-400" />
-              <span className="text-sm font-medium">Scanner un code-barres</span>
-              <span className="text-xs text-gray-400">Base OpenFoodFacts (3M+ produits)</span>
-            </button>
-          ) : (
-            <div>
-              {scannedProduct.image && <img src={scannedProduct.image} alt="" className="w-20 h-20 object-cover rounded-xl mx-auto mb-3" />}
-              <h3 className="font-semibold text-center mb-1">{scannedProduct.name}</h3>
-              {scannedProduct.brand && <p className="text-xs text-gray-500 text-center mb-3">{scannedProduct.brand}</p>}
-              <div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">
-                <div className="bg-orange-50 rounded-lg p-2"><div className="font-bold text-orange-700">{Math.round(scannedProduct.per100g.kcal)}</div><div className="text-orange-600">kcal</div></div>
-                <div className="bg-red-50 rounded-lg p-2"><div className="font-bold text-red-700">{scannedProduct.per100g.p.toFixed(1)}g</div><div className="text-red-600">prot</div></div>
-                <div className="bg-amber-50 rounded-lg p-2"><div className="font-bold text-amber-700">{scannedProduct.per100g.c.toFixed(1)}g</div><div className="text-amber-600">gluc</div></div>
-                <div className="bg-blue-50 rounded-lg p-2"><div className="font-bold text-blue-700">{scannedProduct.per100g.l.toFixed(1)}g</div><div className="text-blue-600">lip</div></div>
-              </div>
-              <p className="text-[10px] text-gray-400 text-center mb-3">Valeurs pour 100g</p>
-              <label className="text-xs text-gray-500">Quantité (g)</label>
-              <div className="flex gap-2 items-center mt-1 mb-3">
-                <input type="number" value={scannedProduct.qty} onChange={e => setScannedProduct({ ...scannedProduct, qty: Number(e.target.value) })} className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm" />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={addScanned} className="flex-1 bg-green-600 text-white py-2 rounded-xl font-medium">✓ Ajouter</button>
-                <button onClick={() => setScannedProduct(null)} className="px-4 bg-gray-100 rounded-xl">Annuler</button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <h2 className="font-semibold mb-3">Repas du jour</h2>
-      {todays.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-8">Aucun repas</p>
-      ) : todays.map((m, i) => {
-        const idx = meals.findIndex(x => x === m);
-        return (
-          <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 mb-2 flex items-center gap-3">
-            <div className="flex-1">
-              <div className="text-xs text-gray-400">{m.time} {m.fromPhoto && '📸'}{m.fromScan && '⊞'}</div>
-              <div className="font-medium text-sm">{m.name} {m.grams > 0 && `(${m.grams}g)`}</div>
-              <div className="text-xs text-gray-500">{m.kcal} kcal • {m.p}P • {m.c}G • {m.l}L</div>
-            </div>
-            <button onClick={() => setMeals(prev => prev.filter((_, x) => x !== idx))} className="text-gray-300">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ===========================
-// SÉANCES
-// ===========================
-function WorkoutView({ workouts, setWorkouts, prs, setPRs }) {
-  const [active, setActive] = useState(null);
-  const [logging, setLogging] = useState({});
-  const [pr, setPr] = useState({ exo: '', value: '' });
-
-  function start(name, prog) { setActive({ name, ...prog }); setLogging({}); }
-  function save() {
-    setWorkouts(prev => [...prev, {
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      name: active.name, type: active.type, data: logging
-    }]);
-    setActive(null); setLogging({});
-  }
-
-  if (active) {
-    return (
-      <div className="p-4 pb-28 safe-top">
-        <div className="flex items-center gap-2 mb-4">
-          <button onClick={() => setActive(null)} className="p-2"><X className="w-5 h-5" /></button>
-          <div>
-            <h1 className="text-lg font-bold">{active.name}</h1>
-            <p className="text-xs text-gray-500">{active.duration || active.type}</p>
-          </div>
-        </div>
-
-        {active.type === 'wolf' ? (
-          <div>
-            <p className="text-sm text-gray-600 mb-4">{active.description}</p>
-            {active.structure.map(c => (
-              <div key={c.circuit} className="bg-white rounded-xl p-4 border border-gray-100 mb-2">
-                <div className="font-semibold text-sm mb-2">Circuit {c.circuit}</div>
-                {c.exercises.map((e, i) => <div key={i} className="text-sm text-gray-700">• {e}</div>)}
-                <input placeholder="Notes" value={logging[`c${c.circuit}`] || ''} onChange={e => setLogging({ ...logging, [`c${c.circuit}`]: e.target.value })} className="w-full mt-2 px-3 py-1 border border-gray-200 rounded-lg text-xs" />
+      {/* Today's log */}
+      {entry.items?.length > 0 && (
+        <>
+          <SecTitle>Repas aujourd'hui</SecTitle>
+          <Card>
+            {entry.items.map(item => (
+              <div key={item.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '10px 0', borderBottom: '1px solid var(--border)'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14 }}>{item.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)' }}>{item.time} · {item.p}g prot</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ fontSize: 14, color: 'var(--accent3)', fontWeight: 600 }}>{item.kcal} kcal</div>
+                  <button onClick={() => removeItem(item.id)} style={{ color: 'var(--text3)', fontSize: 16, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                </div>
               </div>
             ))}
+          </Card>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── PROGRESS PAGE ────────────────────────────────────────────
+function ProgressPage({ weights, setWeights, prs, setPrs }) {
+  const [newWeight, setNewWeight] = useState('')
+  const [editPr, setEditPr] = useState(null)
+  const [newPrVal, setNewPrVal] = useState('')
+
+  function saveWeight() {
+    const w = parseFloat(newWeight)
+    if (!w || w < 40 || w > 300) return
+    const entry = { date: todayKey(), w, ts: Date.now() }
+    setWeights([...weights, entry])
+    setNewWeight('')
+  }
+
+  const chartData = weights.slice(-12).map(e => ({
+    date: e.date.slice(5),
+    poids: e.w
+  }))
+
+  const currentWeight = weights.length > 0 ? weights[weights.length - 1].w : GOALS.weight.current
+  const goalPct = 1 - (currentWeight - GOALS.weight.target) / (GOALS.weight.start - GOALS.weight.target)
+
+  return (
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      {/* Weight card */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div>
+            <div style={{ fontSize: 40, fontWeight: 800, fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+              {currentWeight.toFixed(1)}
+              <span style={{ fontSize: 18, color: 'var(--text2)', fontWeight: 400 }}> kg</span>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--accent4)', marginTop: 4 }}>
+              Objectif : {GOALS.weight.target} kg
+            </div>
           </div>
-        ) : (
-          active.exercises.map((ex, i) => (
-            <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 mb-2">
-              <div className="font-semibold text-sm mb-1">{ex.name}</div>
-              <div className="text-xs text-gray-500 mb-2">{ex.sets} × {ex.reps} • Repos {ex.rest}</div>
-              <div className="flex gap-2">
-                <input type="number" placeholder="Charge (kg)" value={logging[`ex${i}_w`] || ''} onChange={e => setLogging({ ...logging, [`ex${i}_w`]: e.target.value })} className="flex-1 px-2 py-1 border border-gray-200 rounded-lg text-sm" />
-                <input placeholder="Reps" value={logging[`ex${i}_r`] || ''} onChange={e => setLogging({ ...logging, [`ex${i}_r`]: e.target.value })} className="flex-1 px-2 py-1 border border-gray-200 rounded-lg text-sm" />
+          <svg viewBox="0 0 80 80" width={76} height={76}>
+            <circle cx={40} cy={40} r={32} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={6} />
+            <circle cx={40} cy={40} r={32} fill="none" stroke="var(--accent)"
+              strokeWidth={6}
+              strokeDasharray={201.06}
+              strokeDashoffset={201.06 * (1 - Math.min(goalPct, 1))}
+              strokeLinecap="round"
+              transform="rotate(-90 40 40)"
+            />
+            <text x={40} y={45} textAnchor="middle" fill="var(--text)" fontSize={13} fontWeight={700} fontFamily="var(--font-display)">
+              {Math.round(goalPct * 100)}%
+            </text>
+          </svg>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={newWeight}
+            onChange={e => setNewWeight(e.target.value)}
+            type="number"
+            step="0.1"
+            placeholder="Ton poids ce matin (kg)"
+            style={{
+              flex: 1, background: 'var(--bg4)', border: '1px solid var(--border)',
+              borderRadius: 'var(--r-sm)', padding: '10px 12px', color: 'var(--text)', fontSize: 15
+            }}
+          />
+          <Btn onClick={saveWeight}>Sauver</Btn>
+        </div>
+      </Card>
+
+      {/* Chart */}
+      {chartData.length > 1 && (
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-display)', marginBottom: 12 }}>Évolution du poids</div>
+          <ResponsiveContainer width="100%" height={140}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+              <XAxis dataKey="date" tick={{ fill: 'var(--text3)', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis domain={['auto', 'auto']} tick={{ fill: 'var(--text3)', fontSize: 10 }} axisLine={false} tickLine={false} width={35} />
+              <Tooltip contentStyle={{ background: 'var(--bg4)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)' }} />
+              <Line type="monotone" dataKey="poids" stroke="var(--accent)" strokeWidth={2} dot={{ fill: 'var(--accent)', r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
+
+      {/* PRs */}
+      <SecTitle>Records personnels</SecTitle>
+      <Card>
+        {Object.entries(prs).map(([k, pr]) => (
+          <div key={k} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{pr.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)' }}>Cible : {pr.target} kg</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {editPr === k ? (
+                  <>
+                    <input
+                      value={newPrVal}
+                      onChange={e => setNewPrVal(e.target.value)}
+                      type="number"
+                      style={{ width: 60, background: 'var(--bg4)', border: '1px solid var(--accent)', borderRadius: 6, padding: '4px 8px', color: 'var(--text)', fontSize: 14 }}
+                    />
+                    <button onClick={() => {
+                      const v = parseFloat(newPrVal)
+                      if (v > 0) setPrs({ ...prs, [k]: { ...pr, current: v } })
+                      setEditPr(null)
+                    }} style={{ color: 'var(--accent2)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✓</button>
+                  </>
+                ) : (
+                  <div onClick={() => { setEditPr(k); setNewPrVal(pr.current) }} style={{ cursor: 'pointer' }}>
+                    <span style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>{pr.current}</span>
+                    <span style={{ fontSize: 13, color: 'var(--text2)' }}> kg</span>
+                  </div>
+                )}
               </div>
             </div>
-          ))
-        )}
+            <ProgBar pct={pr.current / pr.target} color="var(--accent)" height={4} />
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, textAlign: 'right' }}>
+              {Math.round(pr.current / pr.target * 100)}% de l'objectif
+            </div>
+          </div>
+        ))}
+      </Card>
 
-        <button onClick={save} className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold mt-4">✓ Terminer</button>
+      {/* Stats */}
+      <SecTitle>Résumé</SecTitle>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        {[
+          { val: `−${(GOALS.weight.current - currentWeight).toFixed(1)}`, unit: 'kg', lbl: 'Perdu depuis début', color: 'var(--accent2)' },
+          { val: `${(currentWeight - GOALS.weight.target).toFixed(1)}`, unit: 'kg', lbl: 'Reste à perdre', color: 'var(--accent4)' },
+          { val: weights.length, unit: 'pesées', lbl: 'Total enregistrées', color: 'var(--accent)' },
+          { val: '~9', unit: 'mois', lbl: 'Estimation arrivée', color: 'var(--text2)' },
+        ].map(s => (
+          <div key={s.lbl} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 14 }}>
+            <div>
+              <span style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--font-display)', color: s.color }}>{s.val}</span>
+              <span style={{ fontSize: 14, color: 'var(--text2)' }}> {s.unit}</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>{s.lbl}</div>
+          </div>
+        ))}
       </div>
-    );
+    </div>
+  )
+}
+
+// ─── RECIPES PAGE ─────────────────────────────────────────────
+function RecipesPage() {
+  const [selected, setSelected] = useState(null)
+  const [shopping, setShopping] = useStorage('mf_shopping', {})
+
+  function toggleItem(id) {
+    setShopping(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  if (selected !== null) {
+    const r = RECIPES[selected]
+    return (
+      <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+        <button onClick={() => setSelected(null)} style={{
+          color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 4
+        }}>← Retour</button>
+        <div style={{ fontSize: 48, marginBottom: 8, textAlign: 'center' }}>{r.emoji}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: 4 }}>{r.name}</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>{r.desc}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+          <Chip label={`${r.kcal} kcal`} color="var(--accent3)" bg="var(--accent3-dim)" />
+          <Chip label={`${r.p}g protéines`} color="var(--blue)" bg="rgba(96,165,250,0.1)" />
+          <Chip label={r.time} />
+        </div>
+        <SecTitle>Ingrédients</SecTitle>
+        <Card style={{ marginBottom: 12 }}>
+          {r.ingredients.map((ing, i) => (
+            <div key={i} style={{ padding: '7px 0', borderBottom: i < r.ingredients.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 14 }}>
+              · {ing}
+            </div>
+          ))}
+        </Card>
+        <SecTitle>Préparation</SecTitle>
+        <Card>
+          {r.steps.map((step, i) => (
+            <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i < r.steps.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent-dim)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ fontSize: 14, lineHeight: 1.5 }}>{step}</div>
+            </div>
+          ))}
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="p-4 pb-28 safe-top">
-      <h1 className="text-2xl font-bold mb-1">Sport</h1>
-      <p className="text-sm text-gray-500 mb-4">Wolf + Salle</p>
-
-      <h2 className="font-semibold mb-2 text-xs text-gray-600 uppercase tracking-wider">Wolf (maison)</h2>
-      {Object.entries(WOLF_PROGRAM).map(([n, p]) => (
-        <button key={n} onClick={() => start(n, p)} className="w-full bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl p-4 mb-2 text-left active:scale-95 transition">
-          <div className="font-semibold">{n}</div>
-          <div className="text-xs opacity-80">{p.duration} • {p.structure.length} circuits</div>
-        </button>
-      ))}
-
-      <h2 className="font-semibold mb-2 mt-6 text-xs text-gray-600 uppercase tracking-wider">Salle</h2>
-      {Object.entries(GYM_PROGRAM).map(([n, p]) => (
-        <button key={n} onClick={() => start(n, p)} className="w-full bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-xl p-4 mb-2 text-left active:scale-95 transition">
-          <div className="font-semibold">{n}</div>
-          <div className="text-xs opacity-80">{p.exercises.length} exercices</div>
-        </button>
-      ))}
-
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mt-6">
-        <h3 className="font-semibold mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-amber-500" /> Records (PR)</h3>
-        <div className="flex gap-2 mb-3">
-          <input placeholder="Exo" value={pr.exo} onChange={e => setPr({ ...pr, exo: e.target.value })} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-          <input placeholder="Valeur" value={pr.value} onChange={e => setPr({ ...pr, value: e.target.value })} className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-          <button onClick={() => {
-            if (pr.exo && pr.value) {
-              setPRs(prev => [...prev, { ...pr, date: new Date().toISOString().split('T')[0] }]);
-              setPr({ exo: '', value: '' });
-            }
-          }} className="bg-amber-500 text-white px-3 rounded-lg font-medium">+</button>
-        </div>
-        {prs.slice().reverse().slice(0, 8).map((p, i) => (
-          <div key={i} className="flex justify-between py-1.5 text-sm border-b border-gray-50">
-            <span className="font-medium">{p.exo}</span>
-            <span className="text-amber-700 font-semibold">{p.value}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mt-4">
-        <h3 className="font-semibold mb-3">Historique</h3>
-        {workouts.slice().reverse().slice(0, 5).map((w, i) => (
-          <div key={i} className="py-2 border-b border-gray-50 last:border-0">
-            <div className="text-xs text-gray-400">{w.date} • {w.time}</div>
-            <div className="font-medium text-sm">{w.name}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ===========================
-// RECETTES
-// ===========================
-function RecipesView() {
-  const [open, setOpen] = useState(null);
-  if (open) return (
-    <div className="p-4 pb-28 safe-top">
-      <button onClick={() => setOpen(null)} className="mb-3 text-sm text-gray-600 flex items-center gap-1"><X className="w-4 h-4" /> Retour</button>
-      <h1 className="text-xl font-bold mb-1">{open.name}</h1>
-      <p className="text-xs text-gray-500 mb-4">{open.duration} • {open.portions} portion(s)</p>
-      <div className="grid grid-cols-4 gap-2 mb-4 text-center text-xs">
-        <div className="bg-orange-50 rounded-lg p-2"><div className="font-bold text-orange-700">{open.macros.kcal}</div><div className="text-orange-600">kcal</div></div>
-        <div className="bg-red-50 rounded-lg p-2"><div className="font-bold text-red-700">{open.macros.p}g</div><div className="text-red-600">prot</div></div>
-        <div className="bg-amber-50 rounded-lg p-2"><div className="font-bold text-amber-700">{open.macros.c}g</div><div className="text-amber-600">gluc</div></div>
-        <div className="bg-blue-50 rounded-lg p-2"><div className="font-bold text-blue-700">{open.macros.l}g</div><div className="text-blue-600">lip</div></div>
-      </div>
-      <h3 className="font-semibold mb-2">Ingrédients</h3>
-      <div className="bg-white rounded-xl p-3 border border-gray-100 mb-4">
-        {open.ingredients.map((i, idx) => <div key={idx} className="text-sm py-1 text-gray-700">• {i}</div>)}
-      </div>
-      <h3 className="font-semibold mb-2">Étapes</h3>
-      <div className="space-y-2">
-        {open.steps.map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-semibold shrink-0">{i + 1}</div>
-            <div className="text-sm text-gray-700">{s}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="p-4 pb-28 safe-top">
-      <h1 className="text-2xl font-bold mb-1">Recettes</h1>
-      <p className="text-sm text-gray-500 mb-4">Adaptées à ta diète</p>
-      {RECIPES.map(r => (
-        <button key={r.id} onClick={() => setOpen(r)} className="w-full bg-white rounded-2xl p-4 border border-gray-100 mb-3 text-left flex items-center gap-3 active:scale-98 transition">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center"><ChefHat className="w-6 h-6 text-white" /></div>
-          <div className="flex-1">
-            <div className="font-semibold text-sm">{r.name}</div>
-            <div className="text-xs text-gray-500">{r.duration} • {r.macros.kcal} kcal • {r.macros.p}g prot</div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-300" />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ===========================
-// COURSES
-// ===========================
-function ShoppingView({ checked, setChecked }) {
-  return (
-    <div className="p-4 pb-28 safe-top">
-      <h1 className="text-2xl font-bold mb-1">Courses</h1>
-      <p className="text-sm text-gray-500 mb-4">Liste générée selon tes recettes</p>
-      {Object.entries(SHOPPING_LIST).map(([cat, items]) => (
-        <div key={cat} className="mb-5">
-          <h2 className="font-semibold text-xs text-gray-600 uppercase tracking-wider mb-2">{cat}</h2>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            {items.map((it, i) => {
-              const k = `${cat}-${it.name}`;
-              const c = checked[k];
-              return (
-                <button key={i} onClick={() => setChecked(p => ({ ...p, [k]: !p[k] }))} className={`w-full p-3 flex items-center gap-3 border-b border-gray-50 last:border-0 ${c ? 'opacity-40' : ''}`}>
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${c ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
-                    {c && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className={`font-medium text-sm ${c ? 'line-through' : ''}`}>{it.name}</div>
-                    <div className="text-xs text-gray-400">{it.qty}</div>
-                  </div>
-                  {it.priority === 'haute' && <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">!</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ===========================
-// PROGRESSION
-// ===========================
-function ProgressView({ weight, setWeight, meals, workouts }) {
-  const [w, setW] = useState('');
-  const wd = weight.slice(-30).map(x => ({ date: x.date.slice(5), poids: x.value }));
-  const calMap = {};
-  meals.forEach(m => { calMap[m.date] = (calMap[m.date] || 0) + m.kcal; });
-  const last7 = Object.entries(calMap).sort().slice(-7).map(([d, k]) => ({ date: d.slice(5), kcal: k }));
-
-  return (
-    <div className="p-4 pb-28 safe-top">
-      <h1 className="text-2xl font-bold mb-1">Progression</h1>
-      <p className="text-sm text-gray-500 mb-4">Évolution complète</p>
-
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-semibold mb-3 flex items-center gap-2"><Scale className="w-4 h-4 text-blue-600" /> Poids du jour</h3>
-        <div className="flex gap-2 mb-3">
-          <input type="number" step="0.1" value={w} onChange={e => setW(e.target.value)} placeholder="kg" className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm" />
-          <button onClick={() => {
-            if (w) {
-              const today = new Date().toISOString().split('T')[0];
-              setWeight(prev => [...prev.filter(p => p.date !== today), { date: today, value: parseFloat(w) }].sort((a, b) => a.date.localeCompare(b.date)));
-              setW('');
-            }
-          }} className="bg-blue-600 text-white px-4 rounded-xl font-medium">+</button>
-        </div>
-        {wd.length > 0 && (
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={wd}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} domain={['dataMin - 1', 'dataMax + 1']} />
-                <Tooltip />
-                <Line type="monotone" dataKey="poids" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-semibold mb-3 flex items-center gap-2"><Flame className="w-4 h-4 text-orange-600" /> Calories - 7 derniers jours</h3>
-        {last7.length > 0 ? (
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={last7}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Bar dataKey="kcal" fill="#f97316" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : <p className="text-xs text-gray-400">Pas de données</p>}
-      </div>
-
-      {weight.length > 0 && (
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <h3 className="font-semibold mb-2">Historique pesées</h3>
-          {weight.slice().reverse().slice(0, 10).map((w, i) => (
-            <div key={i} className="flex justify-between py-1.5 text-sm border-b border-gray-50">
-              <span className="text-gray-500">{w.date}</span>
-              <span className="font-semibold">{w.value} kg</span>
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      <SecTitle>Recettes haute protéine</SecTitle>
+      {RECIPES.map((r, i) => (
+        <Card key={r.id} onClick={() => setSelected(i)} style={{ cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{ fontSize: 36, lineHeight: 1 }}>{r.emoji}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-display)', marginBottom: 3 }}>{r.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>{r.desc}</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <Chip label={`${r.p}g prot`} color="var(--blue)" bg="rgba(96,165,250,0.1)" />
+                <Chip label={`${r.kcal} kcal`} color="var(--accent3)" bg="var(--accent3-dim)" />
+                <Chip label={r.time} />
+              </div>
             </div>
+          </div>
+        </Card>
+      ))}
+
+      <SecTitle style={{ marginTop: 8 }}>Liste de courses</SecTitle>
+      {Object.entries(SHOPPING_ITEMS).map(([cat, items]) => (
+        <div key={cat} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6, fontWeight: 600 }}>{cat}</div>
+          <Card style={{ padding: '8px 14px' }}>
+            {items.map(item => (
+              <div key={item.id} onClick={() => toggleItem(item.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0',
+                borderBottom: '1px solid var(--border)', cursor: 'pointer'
+              }}>
+                <div style={{
+                  width: 22, height: 22, borderRadius: 6,
+                  border: `2px solid ${shopping[item.id] ? 'var(--accent2)' : 'var(--border)'}`,
+                  background: shopping[item.id] ? 'var(--accent2-dim)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, transition: 'all .15s'
+                }}>
+                  {shopping[item.id] && <span style={{ fontSize: 12, color: 'var(--accent2)' }}>✓</span>}
+                </div>
+                <span style={{ fontSize: 14, flex: 1, color: shopping[item.id] ? 'var(--text3)' : 'var(--text)', textDecoration: shopping[item.id] ? 'line-through' : 'none' }}>
+                  {item.name}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--text3)' }}>{item.qty}</span>
+              </div>
+            ))}
+          </Card>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── PROFILE PAGE ─────────────────────────────────────────────
+function ProfilePage({ apiKey, setApiKey }) {
+  const [inputKey, setInputKey] = useState(apiKey || '')
+  const [saved, setSaved] = useState(false)
+
+  function save() {
+    setApiKey(inputKey)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  return (
+    <div className="fade-in" style={{ padding: '16px 16px 0' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0 16px' }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 28, fontWeight: 700, fontFamily: 'var(--font-display)',
+          border: '3px solid var(--bg4)', marginBottom: 10
+        }}>M</div>
+        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)' }}>Marwan</div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 10 }}>Technicien IT · Alternant SETEC · 27 ans</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {['Franconville 95', 'PPL 4-5×/sem', '1m91', 'Bac+3 IPSSI'].map(t => (
+            <span key={t} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)' }}>{t}</span>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-// ===========================
-// SETTINGS (clé API)
-// ===========================
-function SettingsView({ apiKey, setApiKey, goals, setGoals }) {
-  const [k, setK] = useState(apiKey);
-  const [g, setG] = useState(goals);
-  return (
-    <div className="p-4 pb-28 safe-top">
-      <h1 className="text-2xl font-bold mb-4">Paramètres</h1>
-
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-semibold mb-2">Clé API Anthropic</h3>
-        <p className="text-xs text-gray-500 mb-3">Pour l'analyse photo. Obtiens ta clé sur console.anthropic.com</p>
-        <input type="password" value={k} onChange={e => setK(e.target.value)} placeholder="sk-ant-..." className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm mb-2" />
-        <button onClick={() => { setApiKey(k); alert('Clé sauvegardée'); }} className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium">Sauvegarder</button>
       </div>
 
-      <div className="bg-white rounded-2xl p-4 border border-gray-100">
-        <h3 className="font-semibold mb-3">Objectifs quotidiens</h3>
-        {[['kcal', 'Calories'], ['p', 'Protéines (g)'], ['c', 'Glucides (g)'], ['l', 'Lipides (g)']].map(([k, l]) => (
-          <div key={k} className="flex items-center gap-2 mb-2">
-            <label className="text-sm text-gray-600 w-32">{l}</label>
-            <input type="number" value={g[k]} onChange={e => setG({ ...g, [k]: Number(e.target.value) })} className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm" />
+      <SecTitle>Objectifs physiques</SecTitle>
+      <Card>
+        {[
+          { label: 'Poids actuel', val: '117 kg' },
+          { label: 'Objectif', val: '103 kg', color: 'var(--accent2)' },
+          { label: 'Priorité muscu', val: 'Épaules', color: 'var(--accent)' },
+          { label: 'Correction posture', val: 'Cyphose', color: 'var(--accent3)' },
+        ].map(o => (
+          <div key={o.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 14 }}>
+            <span style={{ color: 'var(--text2)' }}>{o.label}</span>
+            <span style={{ fontWeight: 500, color: o.color || 'var(--text)' }}>{o.val}</span>
           </div>
         ))}
-        <button onClick={() => { setGoals(g); alert('Sauvegardé'); }} className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium mt-2">Sauvegarder</button>
+      </Card>
+
+      <SecTitle>Suppléments actifs</SecTitle>
+      <Card>
+        {[
+          { name: 'Oméga-3 (EPA/DHA)', status: 'Actif', color: 'var(--accent2)' },
+          { name: 'Magnésium bisglycinate', status: 'Actif', color: 'var(--accent2)' },
+          { name: 'Multivitamines', status: 'Actif', color: 'var(--accent2)' },
+          { name: 'Créatine monohydrate', status: 'À envisager', color: 'var(--accent3)' },
+          { name: 'Vitamine D3/K2', status: 'Recommandé', color: 'var(--accent3)' },
+        ].map(s => (
+          <div key={s.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+            <span style={{ fontSize: 14 }}>{s.name}</span>
+            <Chip label={s.status} color={s.color} bg={`${s.color}22`} />
+          </div>
+        ))}
+      </Card>
+
+      <SecTitle>Paramètres</SecTitle>
+      <Card>
+        <div style={{ marginBottom: 10, fontSize: 13, color: 'var(--text2)' }}>Clé API Anthropic (photo IA)</div>
+        <input
+          type="password"
+          value={inputKey}
+          onChange={e => setInputKey(e.target.value)}
+          placeholder="sk-ant-api03-..."
+          style={{
+            width: '100%', background: 'var(--bg4)', border: '1px solid var(--border)',
+            borderRadius: 'var(--r-sm)', padding: '10px 12px', color: 'var(--text)',
+            fontSize: 14, marginBottom: 8
+          }}
+        />
+        <Btn onClick={save} style={{ width: '100%', justifyContent: 'center' }}>
+          {saved ? '✓ Sauvegardé' : 'Sauvegarder la clé'}
+        </Btn>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
+          Clé stockée localement sur ton appareil uniquement.
+        </div>
+      </Card>
+
+      <div style={{ textAlign: 'center', padding: '12px 0 8px', fontSize: 11, color: 'var(--text3)' }}>
+        MarwanFit v2.0 · Données stockées localement
       </div>
     </div>
-  );
+  )
 }
 
-// ===========================
-// APP
-// ===========================
-export default function App() {
-  const [view, setView] = useState('home');
-  const [meals, setMeals] = useLocalState('meals', []);
-  const [workouts, setWorkouts] = useLocalState('workouts', []);
-  const [weight, setWeight] = useLocalState('weight', []);
-  const [prs, setPRs] = useLocalState('prs', []);
-  const [shopping, setShopping] = useLocalState('shopping', {});
-  const [apiKey, setApiKey] = useLocalState('apiKey', '');
-  const [goals, setGoals] = useLocalState('goals', { kcal: 2500, p: 180, c: 250, l: 70 });
-
+// ─── BOTTOM NAV ───────────────────────────────────────────────
+function BottomNav({ page, setPage }) {
   const tabs = [
-    { id: 'home', label: 'Accueil', icon: Home },
-    { id: 'workout', label: 'Sport', icon: Dumbbell },
-    { id: 'nutrition', label: 'Nutri', icon: Apple },
-    { id: 'recipes', label: 'Recettes', icon: ChefHat },
-    { id: 'shopping', label: 'Courses', icon: ShoppingCart },
-    { id: 'progress', label: 'Progrès', icon: TrendingUp }
-  ];
+    { id: 'home', icon: ICONS.home, label: 'Accueil' },
+    { id: 'workout', icon: ICONS.dumbbell, label: 'Séance' },
+    { id: 'nutrition', icon: ICONS.food, label: 'Nutrition' },
+    { id: 'progress', icon: ICONS.chart, label: 'Progress' },
+    { id: 'recipes', icon: ICONS.book, label: 'Recettes' },
+    { id: 'profile', icon: ICONS.user, label: 'Profil' },
+  ]
+  return (
+    <nav style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: 'var(--bg2)', borderTop: '1px solid var(--border)',
+      display: 'flex', paddingBottom: 'var(--safe-bottom)',
+      zIndex: 100
+    }}>
+      {tabs.map(t => (
+        <button key={t.id} onClick={() => setPage(t.id)} style={{
+          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: 3, padding: '8px 4px 10px', background: 'none', border: 'none', cursor: 'pointer'
+        }}>
+          <Icon d={t.icon} size={20} color={page === t.id ? 'var(--accent)' : 'var(--text3)'} />
+          <span style={{ fontSize: 9, color: page === t.id ? 'var(--accent)' : 'var(--text3)', fontWeight: page === t.id ? 600 : 400 }}>
+            {t.label}
+          </span>
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────
+export default function App() {
+  const [page, setPage] = useState('home')
+  const [todayLog, setTodayLog] = useStorage('mf_food_log', {})
+  const [sessionSets, setSessionSets] = useStorage('mf_session_sets', {})
+  const [sessionsDone, setSessionsDone] = useStorage('mf_sessions_done', {})
+  const [weights, setWeights] = useStorage('mf_weights', [
+    { date: '2025-04-01', w: 120, ts: 1 },
+    { date: '2025-04-08', w: 119.2, ts: 2 },
+    { date: '2025-04-15', w: 118.5, ts: 3 },
+    { date: '2025-04-22', w: 118, ts: 4 },
+    { date: '2025-04-29', w: 117.3, ts: 5 },
+    { date: '2025-05-05', w: 117, ts: 6 },
+  ])
+  const [prs, setPrs] = useStorage('mf_prs', INITIAL_PRS)
+  const [apiKey, setApiKey] = useStorage('mf_api_key', '')
+
+  const pages = {
+    home: <HomePage todayLog={todayLog} setPage={setPage} weights={weights} sessionsDone={sessionsDone} />,
+    workout: <WorkoutPage sessionSets={sessionSets} setSessionSets={setSessionSets} sessionsDone={sessionsDone} setSessionsDone={setSessionsDone} />,
+    nutrition: <NutritionPage todayLog={todayLog} setTodayLog={setTodayLog} apiKey={apiKey} />,
+    progress: <ProgressPage weights={weights} setWeights={setWeights} prs={prs} setPrs={setPrs} />,
+    recipes: <RecipesPage />,
+    profile: <ProfilePage apiKey={apiKey} setApiKey={setApiKey} />,
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto bg-gray-50 min-h-screen relative">
-        {view === 'home' && <HomeView goals={goals} meals={meals} workouts={workouts} weight={weight} setView={setView} />}
-        {view === 'workout' && <WorkoutView workouts={workouts} setWorkouts={setWorkouts} prs={prs} setPRs={setPRs} />}
-        {view === 'nutrition' && <NutritionView apiKey={apiKey} meals={meals} setMeals={setMeals} />}
-        {view === 'recipes' && <RecipesView />}
-        {view === 'shopping' && <ShoppingView checked={shopping} setChecked={setShopping} />}
-        {view === 'progress' && <ProgressView weight={weight} setWeight={setWeight} meals={meals} workouts={workouts} />}
-        {view === 'settings' && <SettingsView apiKey={apiKey} setApiKey={setApiKey} goals={goals} setGoals={setGoals} />}
-
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 safe-bottom z-40">
-          <div className="grid grid-cols-6 gap-1 p-2">
-            {tabs.map(t => {
-              const I = t.icon;
-              return (
-                <button key={t.id} onClick={() => setView(t.id)} className={`flex flex-col items-center py-2 rounded-xl transition ${view === t.id ? 'bg-gray-900 text-white' : 'text-gray-400'}`}>
-                  <I className="w-4 h-4 mb-0.5" />
-                  <span className="text-[10px] font-medium">{t.label}</span>
-                </button>
-              );
-            })}
-          </div>
+    <div style={{
+      maxWidth: 480, margin: '0 auto', height: '100%',
+      display: 'flex', flexDirection: 'column', position: 'relative', background: 'var(--bg)'
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '12px 16px', background: 'var(--bg)',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        flexShrink: 0
+      }}>
+        <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-display)', letterSpacing: '-0.5px' }}>
+          Marwan<span style={{ color: 'var(--accent)' }}>Fit</span>
         </div>
-
-        <button onClick={() => setView('settings')} className="fixed top-3 right-3 z-30 p-2 bg-white border border-gray-200 rounded-full safe-top">
-          <span className="text-xs">⚙️</span>
-        </button>
+        <div style={{ fontSize: 12, color: 'var(--text2)' }}>
+          {new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+        </div>
       </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 70 }}>
+        {pages[page]}
+      </div>
+
+      <BottomNav page={page} setPage={setPage} />
     </div>
-  );
+  )
 }
